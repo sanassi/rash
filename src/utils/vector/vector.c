@@ -1,7 +1,5 @@
 #include "vector.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <err.h>
 
 struct vector *vector_new()
 {
@@ -51,6 +49,14 @@ bool vector_append(struct vector **v, void *elt, size_t elt_size)
     //memmove(res->nodes[size - 1]->data, elt, elt_size);
 
     return true;
+}
+
+void *vector_get_at(struct vector *v, size_t index)
+{
+    if (index >= v->size)
+        errx(1, "vector: out of range exception");
+
+    return v->nodes[index]->data;
 }
 
 void vector_free(struct vector *v)

@@ -79,6 +79,8 @@ struct token
 
 struct lexer
 {
+    size_t current_index;
+
     bool is_at_end;
     bool prev_char_in_op;
     bool quoting;
@@ -103,4 +105,6 @@ void lexer_free(struct lexer *l);
 char *lexer_advance(struct lexer *l);
 struct token *lexer_get_next_token(struct lexer *l);
 void token_free(struct token *t); 
+struct token *lexer_look_next_token(struct lexer *l);
+void token_print(struct token *t);
 #endif /* ! LEXER_H */

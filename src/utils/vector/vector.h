@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <err.h>
 
 struct node
 {
@@ -26,4 +27,5 @@ struct vector *vector_new();
 bool vector_append(struct vector **v, void *elt, size_t elt_size);
 void vector_print(struct vector *v);
 void vector_free(struct vector *v);
+void *vector_get_at(struct vector *v, size_t index);
 #endif /* ! VECTOR_H */

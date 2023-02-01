@@ -13,6 +13,14 @@ static const char *tokens_str[] =
 };
 */
 
+static const char *tokens_str[] =
+{
+    "<<", ">>", "<&", ">&", "<>", "<<-", ">|", "(",
+    ")", "|", "&", ";", "\n", ";;", "&&", "||",
+    "if", "then", "else", "elif", "fi", "do", "done",
+    "case", "esac", "while", "until", "for", "{", "}",
+    "!", "in", "<", ">", NULL,
+};
 static const char *operators[] =
 {
     "&", "&&", "(", ")", ";", ";;", "\n", "|",
@@ -78,6 +86,7 @@ struct lexer *lexer_init(void)
     l->operators = get_operators();
     l->reserved_words = get_reserved_words();
     l->cur_token = calloc(1, sizeof(char *));
+    l->tokens = vector_new();
 
     return l;
 }
@@ -152,7 +161,7 @@ static bool is_quoting_char(char c)
  **/
 
 /*
- * Function needs to be refactored
+ * TODO : Function needs to be refactored
  */
 
 char *lexer_advance(struct lexer *l)
@@ -180,6 +189,11 @@ char *lexer_advance(struct lexer *l)
         return lexer_advance(l);
     }
 
+    /*
+     * problem probaably here : char c is lost
+     * FIX : if the current character  c is not blank,
+     * add it to the characters of the next token
+     */
     if (l->prev_char_in_op && !char_can_form_operator(l, c))
     {
         if (*l->cur_token)
@@ -187,7 +201,9 @@ char *lexer_advance(struct lexer *l)
         free(*l->cur_token);
         *l->cur_token = NULL;
         l->prev_char_in_op = false;
-        //*l->cur_token = my_str_cat(*l->cur_token, &c, 1);
+
+        if (!isblank(c))
+            *l->cur_token = my_str_cat(*l->cur_token, &c, 1);
         return res;
     }
 
@@ -336,8 +352,33 @@ struct token *lexer_create_token(struct lexer *l, char *str)
     return t;
 }
 
+/*
+ * Returns the next token.
+ * The token vector is used as a buffer, if we are at the end,
+ * call lexer_advance and create the next token,
+ * otherwise, get the next token (aalreaday created) from the token
+ * vector.
+ * 
+ * It can be useful when we just want to look at the next token,
+ * without eating it.
+ */
+
 struct token *lexer_get_next_token(struct lexer *l)
 {
+    /*
+    if (l->current_index + 1 < l->tokens->size)
+    {
+        l->current_index += 1;
+        return vector_get_at(l->tokens, l->current_index);
+    }
+    */
+    if (l->current_index < l->tokens->size)
+    {
+        struct token *t = vector_get_at(l->tokens, l->current_index);
+        l->current_index += 1;
+        return t;
+    }
+
     char *lexeme = NULL;
     struct token *res = NULL;
 
@@ -355,7 +396,7 @@ struct token *lexer_get_next_token(struct lexer *l)
         if (l->is_at_end)
             break;
     }
-    //printf("%s\n", lexeme);
+
     if (!lexeme)
     {
         res = calloc(1, sizeof(struct token));
@@ -369,7 +410,16 @@ struct token *lexer_get_next_token(struct lexer *l)
     }
 
     vector_append(&l->tokens, res, sizeof(struct token));
+    l->current_index += 1;
 
+    return res;
+}
+
+struct token *lexer_look_next_token(struct lexer *l)
+{
+    struct token *res = lexer_get_next_token(l);
+    if (l->current_index != 0)
+        l->current_index -= 1;
     return res;
 }
 
@@ -378,4 +428,22 @@ void token_free(struct token *t)
     free(t->lexeme);
     free(t->value);
     free(t);
+}
+
+void token_print(struct token *t)
+{
+    switch (t->type)
+    {
+        case WORD:
+            printf("%s [WORD]\n", t->lexeme);
+            break;
+        case ASSIGNMENT_WORD:
+            printf("%s [ASSIGNMENT_WORD]\n", t->lexeme);
+            break;
+        case IONUMBER:
+            printf("%s [IONUMBER]\n", t->lexeme);
+            break;
+        default:
+            printf("%s [%s]\n", t->lexeme, tokens_str[t->type]);
+    }
 }
