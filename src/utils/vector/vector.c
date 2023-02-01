@@ -1,5 +1,4 @@
 #include "vector.h"
-#include <err.h>
 
 struct vector *vector_new()
 {
@@ -25,6 +24,13 @@ static bool vector_dub_capacity(struct vector *v)
     return true;
 }
 
+bool check_capacity(struct vector *v)
+{
+    if (v->size + 1 == v->capacity)
+        return vector_dub_capacity(v);
+    return false;
+}
+
 bool vector_append(struct vector **v, void *elt, size_t elt_size)
 {
     (void) elt_size;
@@ -33,12 +39,15 @@ bool vector_append(struct vector **v, void *elt, size_t elt_size)
         *v = vector_new();
     struct vector *res = *v;
 
+    /*
     if (res->size + 1 == res->capacity)
     {
         bool dub_err = vector_dub_capacity(res);
         if (!dub_err)
             return false;
     }
+    */
+    check_capacity(res);
 
     res->size += 1;
     size_t size = res->size;

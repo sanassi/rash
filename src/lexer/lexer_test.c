@@ -12,28 +12,17 @@ int main(int argc, char *argv[])
 
     while (!l->is_at_end)
     {
+        printf("expected next token:\n");
+        token_print(lexer_look_next_token(l));
+        printf("got:\n");
         struct token *t = lexer_get_next_token(l);
-        printf("%s\n", t->lexeme);
-        token_free(t);
-        /*
-        char *res = lexer_advance(l);
-        if (!res)
-            continue;
-        printf("%s\n", res);
-        free(res);
-        */
+        token_print(t);
+        printf("\n");
     }
-    /*
-    l->cur_token = calloc(1, sizeof(char *));
-    *l->cur_token = strdup("<");
-
-    if (char_can_form_operator(l, '&'))
-        printf("OP\n");
-    else
-        printf("NOPE\n");
-    */
 
     stream_free(l->stream);
+    for (size_t i = 0; i < l->tokens->size; i++)
+        token_free(l->tokens->nodes[i]->data);
     vector_free(l->tokens);
     lexer_free(l);
     return 0;

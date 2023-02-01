@@ -28,4 +28,5 @@ bool vector_append(struct vector **v, void *elt, size_t elt_size);
 void vector_print(struct vector *v);
 void vector_free(struct vector *v);
 void *vector_get_at(struct vector *v, size_t index);
+bool check_capacity(struct vector *v);
 #endif /* ! VECTOR_H */

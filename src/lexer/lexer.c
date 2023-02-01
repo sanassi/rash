@@ -2,16 +2,6 @@
 
 #define HASH_MAP_DEFAULT_SIZE 50
 
-/*
-static const char *tokens_str[] = 
-{
-    "<<", ">>", "<&", ">&", "<>", ">|", "(",
-    ")", "|", "&", "&&", ";", "\n", ";;", "&&",
-    "||", "if", "then", "else", "elif", "fi", "do",
-    "done","case", "esac", "while", "until", "for",
-    "{", "}", "!", "in", "<", ">", NULL,
-};
-*/
 
 static const char *tokens_str[] =
 {
@@ -173,12 +163,8 @@ char *lexer_advance(struct lexer *l)
     {
         l->is_at_end = true;
         if (!*l->cur_token)
-        {
             return NULL;
-        }
-        char *res = strdup(*l->cur_token);
-        //vector_append(&l->tokens, res, strlen(res) + 1);
-        return res;
+        return strdup(*l->cur_token);
     }
 
     if (l->prev_char_in_op && !l->quoting && char_can_form_operator(l, c))
@@ -356,8 +342,8 @@ struct token *lexer_create_token(struct lexer *l, char *str)
  * Returns the next token.
  * The token vector is used as a buffer, if we are at the end,
  * call lexer_advance and create the next token,
- * otherwise, get the next token (aalreaday created) from the token
- * vector.
+ * otherwise, get the next token (already created) from the token
+ * vector (at current_index).
  * 
  * It can be useful when we just want to look at the next token,
  * without eating it.
@@ -365,13 +351,6 @@ struct token *lexer_create_token(struct lexer *l, char *str)
 
 struct token *lexer_get_next_token(struct lexer *l)
 {
-    /*
-    if (l->current_index + 1 < l->tokens->size)
-    {
-        l->current_index += 1;
-        return vector_get_at(l->tokens, l->current_index);
-    }
-    */
     if (l->current_index < l->tokens->size)
     {
         struct token *t = vector_get_at(l->tokens, l->current_index);
@@ -384,10 +363,15 @@ struct token *lexer_get_next_token(struct lexer *l)
 
     if (l->is_at_end)
     {
+        //return vector_get_at(l->tokens, l->tokens->size - 1);
+        
         res = calloc(1, sizeof(struct token));
         res->type = END;
         res->lexeme = strdup("$$$");
+        vector_append(&l->tokens, res, sizeof(struct token));
+        l->current_index += 1;
         return res;
+        
     }
 
     while (!lexeme)
@@ -397,7 +381,7 @@ struct token *lexer_get_next_token(struct lexer *l)
             break;
     }
 
-    if (!lexeme)
+    if (!lexeme && l->is_at_end)
     {
         res = calloc(1, sizeof(struct token));
         res->type = END;
@@ -407,6 +391,15 @@ struct token *lexer_get_next_token(struct lexer *l)
     {
         res = lexer_create_token(l, lexeme);
         free(lexeme);
+
+        /*
+        if (l->is_at_end)
+        {
+            struct token *end = calloc(1, sizeof(struct token));
+            end->type = END;
+            end -> 
+        }
+        */
     }
 
     vector_append(&l->tokens, res, sizeof(struct token));
@@ -436,6 +429,9 @@ void token_print(struct token *t)
     {
         case WORD:
             printf("%s [WORD]\n", t->lexeme);
+            break;
+        case NEWLINE:
+            printf("\\n [NEWLINE]\n");
             break;
         case ASSIGNMENT_WORD:
             printf("%s [ASSIGNMENT_WORD]\n", t->lexeme);
