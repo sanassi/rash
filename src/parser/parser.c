@@ -187,7 +187,10 @@ int parse_simple_command(struct parser *p, struct ast **res)
     *res = &(simple_cmd->base);
 
     if (!parser_match(p, 1, WORD))
+    {
+        printf("found it!!!!\n");
         return PARSER_ERROR;
+    }
 
     char *cmd_name = parser_previous(p) -> lexeme;
     vector_append(&simple_cmd->args, strdup(cmd_name), strlen(cmd_name));
@@ -249,15 +252,34 @@ int parse_compound_list(struct parser *p, struct ast **res)
     int status = PARSER_OK;
     struct ast *tmp = NULL;
 
+    while (parser_match(p, 1, NEWLINE))
+        continue;
+
     if ((status = parse_and_or(p, &tmp)) != PARSER_OK)
         return PARSER_ERROR;
 
     vector_append(&compound_list->commands, tmp, sizeof(struct ast *));
 
+    while (parser_match(p, 2, SCOLON, NEWLINE))
+    {
+        while (parser_match(p, 1, NEWLINE))
+            continue;
+
+        if (parser_check_mult(p, 2, THEN, FI))
+            break;
+
+        if ((status = parse_and_or(p, &tmp)) != PARSER_OK)
+            return PARSER_ERROR;
+
+        vector_append(&compound_list->commands, tmp, sizeof(struct ast *));
+    }
+
+    /*
     parser_match(p, 1, SCOLON);
 
     while (parser_match(p, 1, NEWLINE))
         continue;
+    */
 
     return status;
 }
@@ -299,6 +321,5 @@ int parse_input(struct parser *p, struct ast **res)
         return status;
     if (!parser_match(p, 2, NEWLINE, END))
         return PARSER_ERROR;
-
     return status;
 }

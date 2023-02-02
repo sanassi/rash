@@ -189,7 +189,12 @@ char *lexer_advance(struct lexer *l)
         l->prev_char_in_op = false;
 
         if (!isblank(c))
+        {
             *l->cur_token = my_str_cat(*l->cur_token, &c, 1);
+            // TODO : TEST THIS
+            if (char_can_start_operator(c))
+                l->prev_char_in_op = true;
+        }
         return res;
     }
 
