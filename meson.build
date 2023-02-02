@@ -6,16 +6,21 @@ project('rash', 'c',
     'c_args=-D_POSIX_C_SOURCE=200809L -Wvla -Wall -Wextra -Werror -pedantic'
     ])
 
-  subdir('src/utils')
   subdir('src/lexer')
   subdir('src/stream')
+  subdir('src/parser')
+  subdir('src/execution')
+  subdir('src/utils')
 
 _rash_src = files([ 'src/main.c'])
 _rash = executable('rash',
   _rash_src,
   dependencies : [
-  utils_dep,
   lexer_dep,
+  stream_dep,
+  parser_dep,
+  utils_dep,
+  execution_dep
   ],
 )
 

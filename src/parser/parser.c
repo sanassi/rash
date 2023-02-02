@@ -120,6 +120,7 @@ int parse_else(struct parser *p, struct ast **res)
     }
     else if (parser_check(p, ELIF)) 
     {
+        parser_advance(p);
         status = parse_if(p, res, false);
     }
     else 
@@ -188,7 +189,6 @@ int parse_simple_command(struct parser *p, struct ast **res)
 
     if (!parser_match(p, 1, WORD))
     {
-        printf("found it!!!!\n");
         return PARSER_ERROR;
     }
 
@@ -265,7 +265,7 @@ int parse_compound_list(struct parser *p, struct ast **res)
         while (parser_match(p, 1, NEWLINE))
             continue;
 
-        if (parser_check_mult(p, 2, THEN, FI))
+        if (parser_check_mult(p, 4, THEN, FI, ELIF, ELSE))
             break;
 
         if ((status = parse_and_or(p, &tmp)) != PARSER_OK)
