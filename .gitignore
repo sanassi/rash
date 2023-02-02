@@ -2,3 +2,6 @@
 *.d
 *.out
 *.a
+*.gch
+build
+
