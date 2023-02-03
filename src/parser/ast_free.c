@@ -40,6 +40,9 @@ static void free_if(struct ast *ast)
 
 void free_ast(struct ast *ast)
 {
+    if (!ast)
+        return;
+
     static const free_type free_functions[] = 
     {
         [AST_SIMPLE_CMD] = &free_simple_cmd,

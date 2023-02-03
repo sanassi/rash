@@ -79,6 +79,8 @@ struct token
 
 struct lexer
 {
+    char current_char;
+
     size_t current_index;
 
     bool is_at_end;

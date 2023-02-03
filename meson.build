@@ -12,6 +12,8 @@ project('rash', 'c',
   subdir('src/execution')
   subdir('src/utils')
 
+  include_directories('tests')
+
 _rash_src = files([ 'src/main.c'])
 _rash = executable('rash',
   _rash_src,
@@ -24,3 +26,5 @@ _rash = executable('rash',
   ],
 )
 
+test_suite = find_program('tests/test.sh')
+test('suite', test_suite)

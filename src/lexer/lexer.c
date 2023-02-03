@@ -1,4 +1,5 @@
 #include "lexer.h"
+#include <stdio.h>
 
 #define HASH_MAP_DEFAULT_SIZE 50
 
@@ -175,11 +176,6 @@ char *lexer_advance(struct lexer *l)
         return lexer_advance(l);
     }
 
-    /*
-     * problem probaably here : char c is lost
-     * FIX : if the current character  c is not blank,
-     * add it to the characters of the next token
-     */
     if (l->prev_char_in_op && !char_can_form_operator(l, c))
     {
         if (*l->cur_token)
@@ -198,9 +194,7 @@ char *lexer_advance(struct lexer *l)
         return res;
     }
 
-    /*
-     * quoting
-     */
+     //quoting
 
     if (!l->quoting && is_quoting_char(c))
     {
@@ -229,13 +223,13 @@ char *lexer_advance(struct lexer *l)
         return lexer_advance(l);
     }
 
-    /*
-     * expansion $..
-     */
+    
+     //expansion $..
+     
 
     if (!l->quoting && char_can_start_operator(c))
     {
-        //*l->cur_token = my_str_cat(*l->cur_token, &c, 1);
+        // *l->cur_token = my_str_cat(*l->cur_token, &c, 1);
         if (*l->cur_token)
             res = strdup(*l->cur_token);
         free(*l->cur_token);
@@ -376,14 +370,13 @@ struct token *lexer_get_next_token(struct lexer *l)
         vector_append(&l->tokens, res, sizeof(struct token));
         l->current_index += 1;
         return res;
-        
     }
 
     while (!lexeme)
     {
-        lexeme = lexer_advance(l);
         if (l->is_at_end)
             break;
+        lexeme = lexer_advance(l);
     }
 
     if (!lexeme && l->is_at_end)
@@ -416,6 +409,8 @@ struct token *lexer_get_next_token(struct lexer *l)
 struct token *lexer_look_next_token(struct lexer *l)
 {
     struct token *res = lexer_get_next_token(l);
+    /*TODO : CHECK !!!!!!!!!!!*/
+    /*------------------------*/
     if (l->current_index != 0)
         l->current_index -= 1;
     return res;
@@ -443,6 +438,9 @@ void token_print(struct token *t)
             break;
         case IONUMBER:
             printf("%s [IONUMBER]\n", t->lexeme);
+            break;
+        case END:
+            printf("END\n");
             break;
         default:
             printf("%s [%s]\n", t->lexeme, tokens_str[t->type]);

@@ -308,6 +308,7 @@ int parse_list(struct parser *p, struct ast **res)
         vector_append(&list->commands, tmp, sizeof(struct ast *));
     }
 
+
     return PARSER_OK;
 }
 
