@@ -68,6 +68,30 @@ void *vector_get_at(struct vector *v, size_t index)
     return v->nodes[index]->data;
 }
 
+char **vector_convert_str_arr(struct vector *v, bool add_null)
+{
+    char **res = NULL;
+    size_t i = 0;
+    for (; i < v->size; i++)
+    {
+        char *copy = strdup(vector_get_at(v, i));
+        char **tmp = realloc(res, (i + 1) * sizeof(char *));
+        if (tmp)
+            res = tmp;
+        res[i] = copy;
+    }
+
+    if (add_null)
+    {
+        char **tmp = realloc(res, (i + 1) * sizeof(char *));
+        if (tmp)
+            res = tmp;
+        res[i] = NULL;
+    }
+
+    return res;
+}
+
 void vector_free(struct vector *v)
 {
     if (!v)

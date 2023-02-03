@@ -4,6 +4,7 @@
 #include "../utils/utils.h"
 #include "../parser/ast.h"
 #include "builtins/bool.h"
+#include "builtins/echo.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -13,6 +14,7 @@
 #define BUILTIN_ERR 127
 
 typedef int (*run_type)(struct ast *ast);
+typedef int (*builtin_run)(struct vector *args);
 int run_ast(struct ast *ast);
 
 #endif /* ! EXECUTION_H */

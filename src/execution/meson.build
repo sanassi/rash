@@ -2,7 +2,9 @@ execution_src = files([
   'execution.c',
   'execution.h',
   'builtins/bool.c',
-  'builtins/bool.h'
+  'builtins/bool.h',
+  'builtins/echo.c',
+  'builtins/echo.h'
 ])
 
 execution_inc = include_directories('.')

@@ -11,6 +11,7 @@ static void free_simple_cmd(struct ast *ast)
         for (size_t i = 0; i < simple_cmd->args->size; i++)
             free(vector_get_at(simple_cmd->args, i));
     }
+
     vector_free(simple_cmd->args);
     free(simple_cmd);
 }

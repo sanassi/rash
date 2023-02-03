@@ -1,28 +1,53 @@
 #include "execution.h"
 #include "builtins/bool.h"
+#include "builtins/echo.h"
+#include <stdio.h>
+#include <string.h>
 
-char **vector_convert_str_arr(struct vector *v, bool add_null)
+static const char *builtins_str[] = {
+    "true", "false", "echo", NULL
+};
+
+bool is_builtin(char *str)
 {
-    char **res = NULL;
-    size_t i = 0;
-    for (; i < v->size; i++)
+    for (size_t i = 0 ; builtins_str[i]; i++)
     {
-        char *copy = strdup(vector_get_at(v, i));
-        char **tmp = realloc(res, (i + 1) * sizeof(char *));
-        if (tmp)
-            res = tmp;
-        res[i] = copy;
+        if (!strcmp(builtins_str[i], str))
+            return true;
+    }
+    return false;
+}
+
+struct builtin
+{
+    char *name;
+    builtin_run exec_func;
+};
+
+int builin_execute(char *builtin_name, struct vector *args)
+{
+    if (str_equ(builtin_name, "true") || str_equ(builtin_name, "false"))
+        return strcmp(builtin_name, "true");
+
+    static struct builtin builtins[] =
+    {
+        {"echo", &echo}
+    };
+
+    size_t nb_builtins = sizeof(builtins) / sizeof(struct builtin);
+    int status = true_builtin();
+
+    for (size_t i = 0; i < nb_builtins; i++)
+    {
+        if (!strcmp(builtins[i].name, builtin_name))
+        {
+            status = builtins[i].exec_func(args);
+            break;
+        }
     }
 
-    if (add_null)
-    {
-        char **tmp = realloc(res, (i + 1) * sizeof(char *));
-        if (tmp)
-            res = tmp;
-        res[i] = NULL;
-    }
-
-    return res;
+    fflush(stdout);
+    return status;
 }
 
 int fork_and_execute(char **args)
@@ -47,6 +72,13 @@ int fork_and_execute(char **args)
 int simple_cmd_execute(struct ast *ast)
 {
     struct ast_simple_cmd *simple_cmd = (struct ast_simple_cmd *) ast;
+
+    char *cmd_name = vector_get_at(simple_cmd->args, 0);
+    if (is_builtin(cmd_name))
+    {
+        return builin_execute(cmd_name, simple_cmd->args);
+    }
+
     char **args = vector_convert_str_arr(simple_cmd->args, true);
 
     int status = fork_and_execute(args);
@@ -63,9 +95,7 @@ int cmd_list_execute(struct ast *ast)
     struct ast_cmd_list *list = (struct ast_cmd_list *) ast;
     int status = true_builtin();
     for (size_t i = 0; i < list->commands->size; i++)
-    {
         status = run_ast(vector_get_at(list->commands, i));
-    }
 
     return status;
 }
