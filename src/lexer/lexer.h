@@ -83,6 +83,10 @@ struct lexer
 
     size_t current_index;
 
+    bool delimited;
+
+    bool met_new_line;
+    bool read_next;
     bool is_at_end;
     bool prev_char_in_op;
     bool quoting;
@@ -104,7 +108,8 @@ struct lexer
 struct lexer *lexer_init(void);
 bool char_can_form_operator(struct lexer *l, char c);
 void lexer_free(struct lexer *l);
-char *lexer_advance(struct lexer *l);
+//char *lexer_advance(struct lexer *l);
+void lexer_advance(struct lexer *l);
 struct token *lexer_get_next_token(struct lexer *l);
 void token_free(struct token *t); 
 struct token *lexer_look_next_token(struct lexer *l);

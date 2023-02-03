@@ -1,4 +1,5 @@
 #include "lexer.h"
+#include <stdbool.h>
 #include <stdio.h>
 
 #define HASH_MAP_DEFAULT_SIZE 50
@@ -78,6 +79,7 @@ struct lexer *lexer_init(void)
     l->reserved_words = get_reserved_words();
     l->cur_token = calloc(1, sizeof(char *));
     l->tokens = vector_new();
+    l->read_next = true;
 
     return l;
 }
@@ -155,58 +157,86 @@ static bool is_quoting_char(char c)
  * TODO : Function needs to be refactored
  */
 
-char *lexer_advance(struct lexer *l)
+// Returns the current string (current token),
+// and reset the current string pointer in
+// the lexer structure
+char *delimit(struct lexer *l)
 {
-    char c = stream_advance(l->stream);
     char *res = NULL;
+    if (*l->cur_token)
+        res = strdup(*l->cur_token);
+    free(*l->cur_token);
+    *l->cur_token = NULL;
+    return res;
+}
+
+bool need_to_delimit(struct lexer *l)
+{
+    return *l->cur_token != NULL;
+}
+
+void lexer_advance(struct lexer *l)
+{
+    char c = stream_peek(l->stream);
 
     if (c == EOF)
     {
         l->is_at_end = true;
-        if (!*l->cur_token)
-            return NULL;
-        return strdup(*l->cur_token);
+        if (need_to_delimit(l))
+        {
+            l->delimited = true;
+            return;
+        }
+
+        stream_advance(l->stream);
+        return;
+    }
+    if (c == '\n')
+    {
+        l->delimited = true;
+        l->prev_char_in_op = false;
+        l->prev_char_in_word = false;        
+        if (*l->cur_token)
+            l->met_new_line = true;
+        else
+            *l->cur_token = my_str_cat(*l->cur_token, &c, 1);
+        stream_advance(l->stream);
+        return;
     }
 
     if (l->prev_char_in_op && !l->quoting && char_can_form_operator(l, c))
     {
         *l->cur_token = my_str_cat(*l->cur_token, &c, 1);
         l->prev_char_in_op = true;
+        l->prev_char_in_word = false;
 
-        return lexer_advance(l);
+        stream_advance(l->stream);
+        lexer_advance(l);
+        return;
     }
-
-    if (l->prev_char_in_op && !char_can_form_operator(l, c))
+    else if (l->prev_char_in_op && !char_can_form_operator(l, c))
     {
-        if (*l->cur_token)
-            res = strdup(*l->cur_token);
-        free(*l->cur_token);
-        *l->cur_token = NULL;
         l->prev_char_in_op = false;
-
-        if (!isblank(c))
-        {
-            *l->cur_token = my_str_cat(*l->cur_token, &c, 1);
-            // TODO : TEST THIS
-            if (char_can_start_operator(c))
-                l->prev_char_in_op = true;
-        }
-        return res;
+        l->delimited = true;
+        return;
     }
-
-     //quoting
-
-    if (!l->quoting && is_quoting_char(c))
+    else if (!l->quoting && is_quoting_char(c))
     {
         l->quoting = true;
         char cur = c;
         *l->cur_token = my_str_cat(*l->cur_token, &cur, 1);
+
         if (c == '\\')
         {
+            stream_advance(l->stream);
+            cur = stream_advance(l->stream);
+            *l->cur_token = my_str_cat(*l->cur_token, &cur, 1);
+            lexer_advance(l);
             l->quoting = false;
-            return lexer_advance(l);
+            return;
         }
 
+        stream_advance(l->stream);
         while (stream_peek(l->stream) != c)
         {
             cur = stream_advance(l->stream);
@@ -220,53 +250,54 @@ char *lexer_advance(struct lexer *l)
         cur = stream_advance(l->stream);
         *l->cur_token = my_str_cat(*l->cur_token, &cur, 1);
         l->quoting = false;
-        return lexer_advance(l);
     }
-
-    
-     //expansion $..
-     
-
-    if (!l->quoting && char_can_start_operator(c))
+    else if (!l->quoting && char_can_start_operator(c))
     {
-        // *l->cur_token = my_str_cat(*l->cur_token, &c, 1);
-        if (*l->cur_token)
-            res = strdup(*l->cur_token);
-        free(*l->cur_token);
-        *l->cur_token = NULL;
-
+        l->prev_char_in_word = false;
         l->prev_char_in_op = true;
-        *l->cur_token = calloc(2, sizeof(char));
-        *l->cur_token[0] = c;
-        return res;
-    }
+        if (need_to_delimit(l))
+        {
+            l->delimited = true;
+            return;
+        }
 
-    if (!l->quoting && isblank(c))
+        *l->cur_token = my_str_cat(*l->cur_token, &c, 1);
+        stream_advance(l->stream);
+        lexer_advance(l);
+        return;
+    }
+    else if (!l->quoting && isblank(c))
     {
-        if (*l->cur_token)
-            res = strdup(*l->cur_token);
-        free(*l->cur_token);
-        *l->cur_token = NULL;
-        return res;
+        l->prev_char_in_word = false;
+        l->prev_char_in_op = false;
+        l->delimited = true;
+        stream_advance(l->stream);
+        return;
     }
-
-    if (l->prev_char_in_word)
+    else if (l->prev_char_in_word)
     {
         *l->cur_token = my_str_cat(*l->cur_token, &c, 1);
-        return lexer_advance(l);
+        stream_advance(l->stream);
+        lexer_advance(l);
+        return;
     }
-
-    if (c == '#')
+    else if (c == '#')
     {
-        while (stream_peek(l->stream) != '\n')
+        l->prev_char_in_op = false;
+        l->prev_char_in_word = false;
+        while (stream_peek(l->stream) != '\n' && stream_peek(l->stream) != EOF)
             stream_advance(l->stream);
-        return lexer_advance(l);
+        lexer_advance(l);
+        return;
     }
-
-    *l->cur_token = my_str_cat(*l->cur_token, &c, 1);
-    l->prev_char_in_word = true;
-
-    return lexer_advance(l);
+    else
+    {
+        *l->cur_token = my_str_cat(*l->cur_token, &c, 1);
+        l->prev_char_in_word = true;
+        l->prev_char_in_op = false;
+        stream_advance(l->stream);
+        lexer_advance(l);
+    }
 }
 
 bool check_io_number(struct lexer *l, char *str)
@@ -360,47 +391,46 @@ struct token *lexer_get_next_token(struct lexer *l)
     char *lexeme = NULL;
     struct token *res = NULL;
 
-    if (l->is_at_end)
-    {
-        //return vector_get_at(l->tokens, l->tokens->size - 1);
-        
-        res = calloc(1, sizeof(struct token));
-        res->type = END;
-        res->lexeme = strdup("$$$");
-        vector_append(&l->tokens, res, sizeof(struct token));
-        l->current_index += 1;
-        return res;
-    }
-
-    while (!lexeme)
+    while (!l->delimited || !*l->cur_token)
     {
         if (l->is_at_end)
             break;
-        lexeme = lexer_advance(l);
+        lexer_advance(l);
     }
 
-    if (!lexeme && l->is_at_end)
+    if (l->is_at_end && !l->delimited)
     {
-        res = calloc(1, sizeof(struct token));
-        res->type = END;
-        res->lexeme = strdup("$$$");
+        struct token *end = calloc(1, sizeof(struct token));
+        end->type = END;
+        end->lexeme = strdup("$$$");
+        vector_append(&l->tokens, end, sizeof(struct token));
+        l->current_index += 1;
+        return end;
     }
-    else
-    {
-        res = lexer_create_token(l, lexeme);
-        free(lexeme);
 
-        /*
-        if (l->is_at_end)
-        {
-            struct token *end = calloc(1, sizeof(struct token));
-            end->type = END;
-            end -> 
-        }
-        */
-    }
+    lexeme = delimit(l);
+    l->delimited = false;
+
+    res = lexer_create_token(l, lexeme);
+    free(lexeme);
 
     vector_append(&l->tokens, res, sizeof(struct token));
+
+    if (l->met_new_line)
+    {
+        vector_append(&l->tokens, 
+                lexer_create_token(l, "\n"), sizeof(struct token));
+        l->met_new_line = false;
+    }
+
+    if (l->is_at_end)
+    {
+        struct token *end = calloc(1, sizeof(struct token));
+        end->type = END;
+        end->lexeme = strdup("$$$");
+        vector_append(&l->tokens, end, sizeof(struct token));
+    }
+
     l->current_index += 1;
 
     return res;
