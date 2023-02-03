@@ -1,0 +1,10 @@
+fun() { echo toto; }
+fun
+fun() { echo heheh; }
+fun
+
+hehe() { echo yo; fun; }
+
+hehe
+fun
+hehe

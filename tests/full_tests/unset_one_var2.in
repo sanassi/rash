@@ -1,0 +1,8 @@
+a=6
+a=6
+unset a
+a=3
+unset a
+unset a
+a=5
+unset a

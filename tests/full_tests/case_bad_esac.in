@@ -1,0 +1,9 @@
+w=1
+case $w in
+    1)
+    echo toto
+    ;;
+    *)
+    ls
+    ;;
+esacc

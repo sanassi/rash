@@ -1,0 +1,2 @@
+a=\'
+echo "c ' $a est l \$a $\a $a\ bon"

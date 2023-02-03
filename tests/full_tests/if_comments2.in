@@ -1,0 +1,4 @@
+if #heheheheh
+true;
+then echo toto;
+fi

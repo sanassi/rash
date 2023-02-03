@@ -1,0 +1,2 @@
+export f=4 g=89
+printenv f g

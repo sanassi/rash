@@ -1,0 +1,3 @@
+alias toto="ls -a" titi="ls"
+toto
+titi

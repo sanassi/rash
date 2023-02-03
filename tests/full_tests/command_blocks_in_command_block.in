@@ -1,0 +1,2 @@
+{ { seq 10; seq 5; } | cat -e; } > file.txt
+cat file.txt

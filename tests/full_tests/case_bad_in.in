@@ -1,0 +1,9 @@
+tata=2
+case $tata inn)
+    2)
+    echo no
+    ;;
+    3)
+    echo nono
+    ;;
+esac

@@ -1,0 +1,6 @@
+a(){ b(){ echo toto;}; b; unset a; }
+b
+b
+a
+a
+b

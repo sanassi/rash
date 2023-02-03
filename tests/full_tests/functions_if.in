@@ -1,0 +1,17 @@
+a=6
+fun() {
+    if [ $1 -le 123]; then
+        echo toto;
+        echo $#
+    else
+        echo hahahaha
+        echo $2
+    fi
+}
+
+
+fun 12 
+
+a=1234
+
+fun 12 34

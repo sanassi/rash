@@ -1,0 +1,6 @@
+echo toto; echo hehe; a=8
+
+(fun() { a=12; echo toto; echo $a}; echo $a)
+
+fun
+echo $a

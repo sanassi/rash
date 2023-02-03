@@ -1,0 +1,11 @@
+if true; then
+    if true; then
+        echo toto;
+    fi
+else
+    if false;
+    then
+        echo hahaha;
+    fi
+fi
+

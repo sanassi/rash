@@ -1,0 +1,5 @@
+alias toto=if
+
+toto true ; then
+    echo hehe;
+fi

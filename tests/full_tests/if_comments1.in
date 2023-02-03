@@ -1,0 +1,6 @@
+if true;
+then
+    #this is a comment hehehehehehe
+    echo bar bar;
+    ls
+fi

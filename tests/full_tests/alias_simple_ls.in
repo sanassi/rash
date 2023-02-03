@@ -1,0 +1,4 @@
+alias toto=ls
+toto
+alias hehe=ls
+hehe

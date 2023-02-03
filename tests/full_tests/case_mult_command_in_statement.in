@@ -1,0 +1,9 @@
+test="manger dans les fesses"
+case $test in
+    "manger dans les fesses" )
+    echo -n yooo ; echo -n trkl ; echo bg?
+    ;;
+    *)
+    echo no
+    ;;
+esac

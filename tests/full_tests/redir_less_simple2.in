@@ -1,0 +1,3 @@
+echo -n ' ' '.' '..' > file.txt
+
+ls < file.txt

@@ -1,0 +1,4 @@
+case "toto" in
+    "tata") echo tata ;;
+    "toto") echo toto ; echo supertoto ;;
+esac

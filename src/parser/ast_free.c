@@ -6,9 +6,11 @@ static void free_simple_cmd(struct ast *ast)
 {
     struct ast_simple_cmd *simple_cmd = (struct ast_simple_cmd *) ast;
 
-    for (size_t i = 0; i < simple_cmd->args->size; i++)
-        free(vector_get_at(simple_cmd->args, i));
-
+    if (simple_cmd->args)
+    {
+        for (size_t i = 0; i < simple_cmd->args->size; i++)
+            free(vector_get_at(simple_cmd->args, i));
+    }
     vector_free(simple_cmd->args);
     free(simple_cmd);
 }
@@ -17,9 +19,10 @@ static void free_cmd_list(struct ast *ast)
 {
     struct ast_cmd_list *list = (struct ast_cmd_list *) ast;
 
-    for (size_t i = 0; i < list->commands->size; i++)
+    if (list->commands)
     {
-        free_ast(vector_get_at(list->commands, i));
+        for (size_t i = 0; i < list->commands->size; i++)
+            free_ast(vector_get_at(list->commands, i));
     }
 
     vector_free(list->commands);

@@ -1,0 +1,8 @@
+if false
+then
+    echo toto;
+elif false; then
+    echo bar;
+else
+    echo YES;
+fi

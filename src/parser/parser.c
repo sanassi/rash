@@ -1,7 +1,8 @@
 #include "parser.h"
 #include "ast.h"
+#include "ast_free.h"
 #include <stdio.h>
-#include <time.h>
+#include <stddef.h>
 
 struct parser *parser_init(void)
 {
@@ -137,24 +138,29 @@ int parse_if(struct parser *p, struct ast **res, bool expect_fi)
     int status = PARSER_OK;
 
     if (expect_fi && !parser_match(p, 1, IF))
-        return PARSER_ERROR;
+        goto error;
 
     if ((status = parse_compound_list(p, &if_node->condition)) != PARSER_OK)
-        return PARSER_ERROR;
+        goto error;
 
     if (!parser_match(p, 1, THEN))
-        return PARSER_ERROR;
+        goto error;
 
     if ((status = parse_compound_list(p, &if_node->body)) != PARSER_OK)
-        return PARSER_ERROR;
+        goto error;
 
     if (parser_check_mult(p, 2, ELSE, ELIF))
         status = parse_else(p, &if_node->else_body);
 
     if (expect_fi && !parser_match(p, 1, FI))
-        return PARSER_ERROR;
+        goto error;
 
     return status;
+
+error:
+    free_ast(*res);
+    *res = NULL;
+    return PARSER_ERROR;
 }
 
 int parse_shell_command(struct parser *p, struct ast **res)
@@ -185,12 +191,11 @@ int parse_element(struct parser *p, struct ast **res)
 int parse_simple_command(struct parser *p, struct ast **res)
 {
     struct ast_simple_cmd *simple_cmd = ast_simple_cmd_alloc();
+    simple_cmd->args = vector_new();
     *res = &(simple_cmd->base);
 
     if (!parser_match(p, 1, WORD))
-    {
-        return PARSER_ERROR;
-    }
+        goto error;
 
     char *cmd_name = parser_previous(p) -> lexeme;
     vector_append(&simple_cmd->args, strdup(cmd_name), strlen(cmd_name));
@@ -204,6 +209,11 @@ int parse_simple_command(struct parser *p, struct ast **res)
     }
 
     return PARSER_OK;
+
+error:
+    free_ast(*res);
+    *res = NULL;
+    return PARSER_ERROR;
 }
 
 int parse_command(struct parser *p, struct ast **res)
@@ -256,7 +266,7 @@ int parse_compound_list(struct parser *p, struct ast **res)
         continue;
 
     if ((status = parse_and_or(p, &tmp)) != PARSER_OK)
-        return PARSER_ERROR;
+       goto error; 
 
     vector_append(&compound_list->commands, tmp, sizeof(struct ast *));
 
@@ -269,18 +279,16 @@ int parse_compound_list(struct parser *p, struct ast **res)
             break;
 
         if ((status = parse_and_or(p, &tmp)) != PARSER_OK)
-            return PARSER_ERROR;
+            goto error;
 
         vector_append(&compound_list->commands, tmp, sizeof(struct ast *));
     }
 
-    /*
-    parser_match(p, 1, SCOLON);
+    return status;
 
-    while (parser_match(p, 1, NEWLINE))
-        continue;
-    */
-
+error:
+    free_ast(&compound_list->base);
+    *res = NULL;
     return status;
 }
 
@@ -295,7 +303,7 @@ int parse_list(struct parser *p, struct ast **res)
     struct ast *tmp = NULL;
 
     if ((status = parse_and_or(p, &tmp)) != PARSER_OK)
-        return status;
+        goto error;
 
     vector_append(&list->commands, tmp, sizeof(struct ast *));
 
@@ -308,8 +316,12 @@ int parse_list(struct parser *p, struct ast **res)
         vector_append(&list->commands, tmp, sizeof(struct ast *));
     }
 
-
     return PARSER_OK;
+
+error:
+    free_ast(&list->base);
+    *res = NULL;
+    return status;
 }
 
 int parse_input(struct parser *p, struct ast **res)

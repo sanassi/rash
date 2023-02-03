@@ -1,0 +1,8 @@
+p=1
+case $p in
+    1)
+    echo toto
+    ;;
+    *)
+    echo tata
+    ;;

@@ -1,0 +1,5 @@
+echo > file.txt
+echo >> file.txt
+echo toooto
+
+tree >> file.txt

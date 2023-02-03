@@ -1,0 +1,5 @@
+a=oui
+echo $a$a
+bon=jour
+echo $jour$jour
+echo $a:$a $bon:$bon

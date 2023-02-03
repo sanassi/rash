@@ -1,0 +1,15 @@
+alias toto=ls
+alias hehe=tree
+alias hahah=baby
+
+toto
+hehe
+
+unalias -a
+
+alias toto=ls
+alias hehe=tree
+alias hahah=baby
+
+toto
+hehe

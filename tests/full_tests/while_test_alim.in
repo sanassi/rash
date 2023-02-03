@@ -1,0 +1,11 @@
+a=true
+b=false
+c=false
+d=false
+while $a && ! $d; 
+do
+    echo toto
+    d=$c
+    c=$b
+    b=$a
+done

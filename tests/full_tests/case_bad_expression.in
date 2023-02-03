@@ -1,0 +1,8 @@
+case $toto in
+    yo)
+     echo toto
+     ;;
+    ya)
+     echo tata
+     ;;
+esac

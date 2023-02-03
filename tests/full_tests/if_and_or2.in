@@ -1,0 +1,5 @@
+if false && true; then
+    echo toto
+else
+    echo hehehe;
+fi

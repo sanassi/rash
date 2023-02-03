@@ -1,0 +1,8 @@
+esac "yomec" in
+    "yomen")
+    echo no
+    ;
+    "yomec")
+    echo yes
+    ;;
+esac

@@ -1,0 +1,14 @@
+for file in $(ls)
+do
+case $file in
+    "42sh")
+    echo 42sh
+    ;;
+    "test.sh")
+    echo test.sh
+    ;;
+    *)
+    echo other
+    ;;
+esac
+done

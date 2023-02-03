@@ -1,0 +1,3 @@
+if [ $(ls | wc -l) -ge $(ls .. | wc -l) ]; then
+    echo toto
+fi

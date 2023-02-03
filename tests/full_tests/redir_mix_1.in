@@ -1,0 +1,12 @@
+echo c > file.txt
+echo d >> file.txt
+echo a >> file.txt
+echo z >> file.txt
+
+echo null > file2.txt
+
+sort < file.txt
+
+sort < file.txt > file2.txt
+
+cat file.txt ; cat file2.txt

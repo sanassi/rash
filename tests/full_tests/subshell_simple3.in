@@ -1,0 +1,7 @@
+a=5
+fun() { a=123; echo toto; }
+
+(fun; echo heheh; a=123456; echo $a)
+
+echo $a
+fun

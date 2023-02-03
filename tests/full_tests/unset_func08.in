@@ -1,0 +1,10 @@
+a(){ echo toto; }
+a=5
+echo $a
+a
+unset -f a
+echo $a
+a
+unset a
+a
+echo $a

@@ -1,0 +1,7 @@
+a=6
+echo $a
+unset a
+a=8
+echo $a
+unset a
+echo $a

@@ -1,0 +1,4 @@
+p=5
+l=8010000
+export l p=42 s=2
+printenv l p s

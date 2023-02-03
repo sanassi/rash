@@ -1,0 +1,2 @@
+export c=12
+printenv c

@@ -1,0 +1,5 @@
+if true;
+then echo pimpin "ain't'" easy;
+else
+    echo yes;
+fi

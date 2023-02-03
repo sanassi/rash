@@ -1,0 +1,5 @@
+a=3
+b=$a
+c=$ab
+echo $b$a$b $ac$b
+echo $b

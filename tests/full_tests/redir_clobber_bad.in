@@ -1,0 +1,2 @@
+echno toto >| file.txt
+cat file.txt

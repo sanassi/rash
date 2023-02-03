@@ -1,0 +1,4 @@
+alias toto=ls
+unalias toto
+alias toto=echo
+toto

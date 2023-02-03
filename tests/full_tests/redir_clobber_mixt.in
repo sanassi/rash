@@ -1,0 +1,4 @@
+echo toto >| file.txt > file2.txt
+
+cat file.txt
+cat file2.txt

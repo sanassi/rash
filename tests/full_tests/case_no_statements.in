@@ -1,0 +1,7 @@
+case "kaka" in
+    "koko")
+    ;;
+    "kaka")
+    echo ouai
+    ;;
+esac

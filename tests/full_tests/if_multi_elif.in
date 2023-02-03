@@ -1,0 +1,14 @@
+if false; then
+    echo toto;
+elif false; then
+    echo bar;
+elif false; then
+    ls
+elif false; then
+    if true; then
+        echo hahahahah;
+    fi
+elif false; then
+    ls;
+else
+    echo toto;

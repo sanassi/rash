@@ -1,0 +1,10 @@
+a(){ echo toto; }
+b(){ echo tata; }
+a
+b
+unset a b
+a
+b
+unset -f a b
+a
+b

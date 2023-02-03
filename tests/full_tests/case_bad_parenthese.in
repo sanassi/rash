@@ -1,0 +1,9 @@
+eho=2
+case $eho in
+    2
+    echo toto
+    ;;
+    1)
+    ls
+    ;;
+esac

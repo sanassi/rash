@@ -1,0 +1,7 @@
+a=8
+echo $a
+(a=7; echo $a; exit 42)
+
+
+(a=8; echo toto; a=9; echo $a; exit 56; echo toto; )
+echo $?

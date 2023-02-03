@@ -1,0 +1,7 @@
+echo hehe1 > toto.txt
+while [ $(cat toto.txt | wc -l) -le 10 ]
+do
+    echo hehe >> toto.txt
+done
+
+cat toto.txt

@@ -1,0 +1,3 @@
+for var in toto tata heheh yo aergbae aega aeba ebae baeb apio
+do echo $var; ls; 
+done

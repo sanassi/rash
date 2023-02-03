@@ -1,0 +1,4 @@
+myvar=18
+echo $myvar
+myvar=12345678
+echo $myvar

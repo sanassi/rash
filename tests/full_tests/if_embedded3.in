@@ -1,0 +1,10 @@
+if false;
+then
+    echo rip;
+elif false
+then
+    echo not yet
+elif true;
+then
+    echo heheh;
+fi

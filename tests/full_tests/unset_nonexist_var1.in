@@ -1,0 +1,4 @@
+unset b
+a=2
+unset a
+unset c

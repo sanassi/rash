@@ -1,0 +1,4 @@
+a=5
+echo $a
+(a=4; echo toto; echo "a = $a"; echo "pid = $$")
+echo heheheh

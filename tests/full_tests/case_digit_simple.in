@@ -1,0 +1,20 @@
+a=42
+case $a in
+
+  424242)
+    echo false
+    ;;
+
+  4242)
+    echo false
+    ;;
+
+  42)
+    ls
+    ;;
+
+  *)
+    echo false
+    ;;
+esac
+

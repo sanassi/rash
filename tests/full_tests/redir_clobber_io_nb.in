@@ -1,0 +1,3 @@
+echo toto 1>| file.txt
+
+cat file.txt

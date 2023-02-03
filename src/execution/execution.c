@@ -75,8 +75,9 @@ int if_execute(struct ast *ast)
     struct ast_if *if_node = (struct ast_if *) ast;
 
     int status = true_builtin();
+    int condition_status;
 
-    if ((status = run_ast(if_node->condition)) == true_builtin())
+    if ((condition_status = run_ast(if_node->condition)) == true_builtin())
         status = run_ast(if_node->body);
     else if (if_node->else_body)
         status = run_ast(if_node->else_body);

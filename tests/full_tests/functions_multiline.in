@@ -1,0 +1,8 @@
+fun()
+{
+    echo toto;
+    echo hehe;
+    echo haha
+}
+
+fun

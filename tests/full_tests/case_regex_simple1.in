@@ -1,0 +1,12 @@
+country="france"
+case $country in
+    guinee)
+        echo sanassi
+        ;;
+    pologne)
+        echo alim
+        ;;
+    france)
+        echo kenza
+        ;;
+esac

@@ -1,0 +1,6 @@
+unset a b c
+a=2 
+b=3
+unset a b
+unset c
+unset b c d a

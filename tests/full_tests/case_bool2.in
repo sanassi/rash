@@ -1,0 +1,7 @@
+case false in
+    true)
+    echo true
+    ;;
+    false)
+    echo false
+esac

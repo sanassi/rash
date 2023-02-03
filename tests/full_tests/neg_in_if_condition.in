@@ -1,0 +1,5 @@
+if ! true; then
+    echo toto;
+else
+    echo yes!
+fi

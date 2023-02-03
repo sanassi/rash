@@ -1,0 +1,9 @@
+m="oui"
+case $m
+    "oui")
+    echo toto
+    ;;
+    "non")
+    echo tata
+    ;;
+esac

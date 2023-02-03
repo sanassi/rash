@@ -1,0 +1,7 @@
+case "test" in 
+    "toto")
+    echo tg
+    ;;
+    "test") echo oui ;
+    echo super ; echo encore mieux ;;
+esac

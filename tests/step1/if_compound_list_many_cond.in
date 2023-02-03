@@ -1,0 +1,7 @@
+if false; true;
+    echo true
+then
+    echo toto;
+else
+    echo bar;
+fi

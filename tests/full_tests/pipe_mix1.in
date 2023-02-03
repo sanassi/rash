@@ -1,0 +1,4 @@
+echo toto > file.txt; 
+echo tata > file.txt; 
+echo titi > file.txt; 
+cat file1.txt | sort | wc -wlL

@@ -1,0 +1,3 @@
+a=3
+b=5
+echo $b$bb$a

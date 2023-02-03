@@ -1,0 +1,5 @@
+alias toto=ls titi=ls tata=ls
+unalias toto titi tata
+toto
+titi
+tata

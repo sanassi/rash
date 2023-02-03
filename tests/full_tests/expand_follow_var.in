@@ -1,0 +1,2 @@
+a=Bo
+echo $a$a

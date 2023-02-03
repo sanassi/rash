@@ -1,0 +1,3 @@
+echo toto > file1.txt #toto
+echo toto >> file1.txt #toto
+cat file1.txt

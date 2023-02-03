@@ -1,0 +1,8 @@
+t=5
+case $t in
+    5)
+    echo nooo
+    ;;
+    2)
+    echo oh noo
+esac

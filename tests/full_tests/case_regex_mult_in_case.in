@@ -1,0 +1,15 @@
+country="tientientien"
+case $country in
+    guinee | americano)
+        echo sanassi
+        ;;
+    pologne | "tientientien")
+        echo alim
+        ;;
+    france)
+        echo kenza
+        ;;
+    *)
+        echo -n yoooo
+        ;;
+esac

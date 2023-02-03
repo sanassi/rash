@@ -1,0 +1,4 @@
+a=5
+echo $a
+. ./variables_in_if.in
+

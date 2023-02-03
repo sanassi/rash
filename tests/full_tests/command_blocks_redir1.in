@@ -1,0 +1,2 @@
+{ echo a; echo b; } > file10.txt
+cat file10.txt

@@ -1,0 +1,8 @@
+case "toto" in
+    "tata")
+    echo toto
+    ;;
+    tutute)
+    ls
+    ;;
+esac

@@ -1,0 +1,6 @@
+cmd=echo
+arg1=toto
+arg2=hehe
+arg3=yo
+
+$cmd $arg1 $arg2 $arg3

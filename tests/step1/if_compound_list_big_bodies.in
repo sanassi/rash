@@ -1,0 +1,10 @@
+if true;
+then
+echo toto;
+echo bar; ls
+ls
+echo this is an amazaing test suite
+    if true; then
+        echo toto;
+    fi
+fi

@@ -1,0 +1,4 @@
+if true; then;
+echo ; echo toto
+echo hehe; echo tata
+fi

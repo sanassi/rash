@@ -1,0 +1,9 @@
+toto=20
+case $toto in
+    20)
+    echno toto
+    ;;
+    *)
+    echo tata
+    ;;
+esac

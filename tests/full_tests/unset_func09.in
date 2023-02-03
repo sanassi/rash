@@ -1,0 +1,9 @@
+a(){ echo toto; }
+echo $a
+a
+unset -v a
+echo $a
+a
+unset a
+a
+echo $a

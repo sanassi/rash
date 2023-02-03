@@ -137,31 +137,20 @@ int main(int argc, char *argv[])
         struct ast *root = NULL;
 
         status = parse_input(p, &root);
-        if (status == PARSER_ERROR)
-            printf("ERROR\n");
+        if (status == PARSER_ERROR && !args->input)
+            errx(status, "grammar error");
+
         if (args->pretty)
             print_ast(root);
-        run_ast(root);
+        status = run_ast(root);
+        if (status != true_builtin() && !args->input)
+            errx(status, "execution error");
 
         fflush(stream->fp);
 
         free_ast(root);
         parser_free(p);
     }
-    /*
-    struct ast *root = NULL;
-    int status = parse_input(p, &root);
-
-    if (status == PARSER_ERROR)
-        printf("ERROR\n");
-
-    if (args->pretty)
-        print_ast(root);
-
-    run_ast(root);
-
-    free_ast(root);
-    */
 
     for (size_t i = 0; i < l->tokens->size; i++)
         token_free(l->tokens->nodes[i]->data);
@@ -170,5 +159,5 @@ int main(int argc, char *argv[])
     lexer_free(l);
     stream_free(stream);
     args_free(args);
-    return 0;
+    return status;
 }
