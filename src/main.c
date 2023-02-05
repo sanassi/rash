@@ -142,7 +142,9 @@ int main(int argc, char *argv[])
 
         if (args->pretty)
             print_ast(root);
+
         status = run_ast(root);
+
         if (status != true_builtin() && !args->input)
             errx(status, "execution error");
 

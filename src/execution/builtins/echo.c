@@ -6,7 +6,7 @@
 
 void print(char *str, bool interpret)
 {
-    for (size_t i = 0; str[i]; i++)
+    for (size_t i = 0; i < strlen(str); i++)
     {
         if (str[i] != '\\')
         {
@@ -24,14 +24,18 @@ void print(char *str, bool interpret)
         {
             case 'n':
                 printf("\n");
+                i += 1;
                 break;
             case 't':
+                i += 1;
                 printf("\t");
                 break;
             case '\\':
-                printf("\\\\");
+                i += 1;
+                printf("\\");
                 break;
             default:
+                printf("%c", str[i]);
                 break;
         }
     }
@@ -66,7 +70,6 @@ int echo(struct vector *args)
             break;
         }
     }
-    
 
     for (size_t i = optind; i < args->size; i++)
     {
@@ -89,7 +92,7 @@ int echo(struct vector *args)
 int main(int argc, char *argv[])
 {
     struct vector *v = vector_new();
-    for (int i = 0 ; i < argc; i++)
+    for (int i = 0; i < argc; i++)
         vector_append(&v, argv[i], strlen(argv[i]));
 
     echo(v);
