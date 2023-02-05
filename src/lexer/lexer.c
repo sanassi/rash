@@ -230,7 +230,8 @@ void lexer_advance(struct lexer *l)
         {
             stream_advance(l->stream);
             cur = stream_advance(l->stream);
-            *l->cur_token = my_str_cat(*l->cur_token, &cur, 1);
+            if (cur != EOF)
+                *l->cur_token = my_str_cat(*l->cur_token, &cur, 1);
             lexer_advance(l);
             l->quoting = false;
             return;

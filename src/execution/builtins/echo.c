@@ -49,11 +49,20 @@ int echo(struct vector *args)
     bool interpret;
     bool print_newline = true;
 
+    for (size_t i = 0; i < args->size; i++)
+    {
+        if (!args_str[i])
+            printf("NULL\n");
+    }
+
+    optind = 1;
     opterr = 0;
+
+    bool stop = false;
 
     while ((c = getopt(args->size, args_str, "neE")) != -1)
     {
-        switch (c) 
+        switch (c)
         {
         case 'n':
             print_newline = false;
@@ -65,10 +74,14 @@ int echo(struct vector *args)
             interpret = false;
             break;
         case '?':
+            optind -= 1;
+            stop = true;
             break;
         default:
             break;
         }
+        if (stop)
+            break;
     }
 
     for (size_t i = optind; i < args->size; i++)
@@ -84,6 +97,8 @@ int echo(struct vector *args)
     for (size_t i = 0; i < args->size; i++)
         free(args_str[i]);
     free(args_str);
+
+    optind = 1;
 
     return 0;
 }

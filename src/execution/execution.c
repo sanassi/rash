@@ -75,9 +75,7 @@ int simple_cmd_execute(struct ast *ast)
 
     char *cmd_name = vector_get_at(simple_cmd->args, 0);
     if (is_builtin(cmd_name))
-    {
         return builin_execute(cmd_name, simple_cmd->args);
-    }
 
     char **args = vector_convert_str_arr(simple_cmd->args, true);
 
