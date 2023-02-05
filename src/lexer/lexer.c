@@ -1,4 +1,5 @@
 #include "lexer.h"
+#include <err.h>
 #include <stdbool.h>
 #include <stdio.h>
 
@@ -240,6 +241,11 @@ void lexer_advance(struct lexer *l)
         stream_advance(l->stream);
         while (stream_peek(l->stream) != c)
         {
+            if (stream_peek(l->stream) == EOF)
+            {
+                errx(2, "missing terminating quote");
+                return;
+            }
             cur = stream_advance(l->stream);
             *l->cur_token = my_str_cat(*l->cur_token, &cur, 1);
             if (cur == '\\' && c == '"')

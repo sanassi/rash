@@ -11,6 +11,7 @@ project('rash', 'c',
   subdir('src/parser')
   subdir('src/execution')
   subdir('src/utils')
+  subdir('src/expansion')
 
   include_directories('tests')
 
@@ -22,7 +23,8 @@ _rash = executable('rash',
   stream_dep,
   parser_dep,
   utils_dep,
-  execution_dep
+  execution_dep,
+  expansion_dep
   ],
 )
 

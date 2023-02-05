@@ -1,7 +1,9 @@
 #include "execution.h"
 #include "builtins/bool.h"
 #include "builtins/echo.h"
+#include "../expansion/expansion.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 static const char *builtins_str[] = {
@@ -72,18 +74,38 @@ int fork_and_execute(char **args)
 int simple_cmd_execute(struct ast *ast)
 {
     struct ast_simple_cmd *simple_cmd = (struct ast_simple_cmd *) ast;
+    struct vector *expanded_args = vector_new();
+    int status;
 
-    char *cmd_name = vector_get_at(simple_cmd->args, 0);
+    for (size_t i = 0; i < simple_cmd->args->size; i++)
+    {
+        struct vector *expanded = expand(vector_get_at(simple_cmd->args, i));
+        for (size_t j = 0; j < expanded->size; j++)
+        {
+            char *str = vector_get_at(expanded, j);
+            vector_append(&expanded_args, str, strlen(str) + 1);
+        }
+        vector_free(expanded);
+    }
+
+    //char *cmd_name = vector_get_at(simple_cmd->args, 0);
+    char *cmd_name = vector_get_at(expanded_args, 0);
+
     if (is_builtin(cmd_name))
-        return builin_execute(cmd_name, simple_cmd->args);
+        status = builin_execute(cmd_name, expanded_args);
+    else
+    {
+        char **args = vector_convert_str_arr(expanded_args, true);
+        status = fork_and_execute(args);
 
-    char **args = vector_convert_str_arr(simple_cmd->args, true);
+        for (size_t i = 0; args[i]; i++)
+            free(args[i]);
+        free(args);
+    }
 
-    int status = fork_and_execute(args);
-
-    for (size_t i = 0; args[i]; i++)
-        free(args[i]);
-    free(args);
+    for (size_t i = 0; i < expanded_args->size; i++)
+        free(vector_get_at(expanded_args, i));
+    vector_free(expanded_args);
 
     return status;
 }
