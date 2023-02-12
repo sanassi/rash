@@ -32,6 +32,17 @@ enum ast_type
     AST_CASE,
 };
 
+enum redirection_type
+{
+    REDIR_GREAT, // >
+    REDIR_LESS, // <
+    REDIR_DGREAT, // >>
+    REDIR_GREATAND, // >&
+    REDIR_LESSAND, // <&
+    REDIR_CLOBBER, // >|
+    REDIR_LESSGREAT, // <>
+};
+
 struct ast
 {
     enum ast_type type;
@@ -41,12 +52,23 @@ struct ast_simple_cmd
 {
     struct ast base;
     struct vector *args;
+
+    struct vector *redir_pref;
+    struct vector *redir_suff;
 };
 
 struct ast_cmd_list
 {
     struct ast base;
     struct vector *commands;
+};
+
+struct ast_cmd
+{
+    struct ast base;
+    struct ast *command;
+    
+    struct vector *redirections;
 };
 
 struct ast_if
@@ -57,6 +79,37 @@ struct ast_if
     struct ast *body;
 
     struct ast *else_body;
+};
+
+struct ast_redir
+{
+    struct ast base;
+
+    char *redir_op;
+
+    bool has_io_number;
+    int io_number;
+
+    int start_fd;
+    int new_fd;
+    enum redirection_type redir_type;
+
+    char *file;
+};
+
+struct ast_pipe
+{
+    struct ast base;
+
+    struct ast *left;
+    struct ast *right;
+};
+
+struct ast_pipeline
+{
+    struct ast base;
+
+    struct ast *pipe;
 };
 
 typedef void (*free_type)(struct ast *ast);

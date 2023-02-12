@@ -1,0 +1,4 @@
+echo 'foo' |
+sed 's/f/a/' | # change first f to a
+sed 's/o/b/' | # change first o to b
+sed 's/o/c/'   # change second o to c

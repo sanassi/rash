@@ -3,6 +3,7 @@
 #include "ast_free.h"
 #include <stdio.h>
 #include <stddef.h>
+#include <stdlib.h>
 
 struct parser *parser_init(void)
 {
@@ -88,6 +89,7 @@ static bool parser_match(struct parser *p, size_t count, ...)
     return false;
 }
 
+
 #define AST_ALLOC(ast_type, enum_type)                                         \
     static struct ast_##ast_type *ast_##ast_type##_alloc(void)       \
     {                                                                          \
@@ -100,6 +102,10 @@ static bool parser_match(struct parser *p, size_t count, ...)
 AST_ALLOC(simple_cmd, AST_SIMPLE_CMD)
 AST_ALLOC(cmd_list, AST_CMD_LIST)
 AST_ALLOC(if, AST_IF)
+AST_ALLOC(redir, AST_REDIR)
+AST_ALLOC(cmd, AST_CMD)
+AST_ALLOC(pipe, AST_PIPE)
+AST_ALLOC(pipeline, AST_PIPELINE)
 
 /*
  * forward declarations
@@ -108,7 +114,7 @@ AST_ALLOC(if, AST_IF)
 int parse_compound_list(struct parser *p, struct ast **res);
 int parse_and_or(struct parser *p, struct ast **res);
 int parse_if(struct parser *p, struct ast **res, bool expect_fi);
-
+int parse_redirection(struct parser *p, struct ast **res);
 
 int parse_else(struct parser *p, struct ast **res)
 {
@@ -182,10 +188,83 @@ int parse_shell_command(struct parser *p, struct ast **res)
 
 int parse_element(struct parser *p, struct ast **res)
 {
-    (void) res;
+    if (parser_match(p, 1, WORD))
+        return PARSER_OK;
+    else
+        return parse_redirection(p, res);
+}
+
+int parse_redirection(struct parser *p, struct ast **res)
+{
+    struct ast_redir *redir = ast_redir_alloc();
+    *res = &(redir->base);
+
+    if (parser_match(p, 1, IONUMBER))
+    {
+        redir->io_number = atoi(parser_previous(p)->lexeme);
+        redir->has_io_number = true;
+    }
+
+    if (!parser_match(p, 7, GREAT, LESS, DGREAT, GREATAND, 
+                LESSAND, CLOBBER, LESSGREAT))
+        goto error;
+
+    // switch needs to be replaced (w/ macro, or just by including lexer.h)
+    switch (parser_previous(p)->type) 
+    {
+    case LESS:
+        redir->redir_type = REDIR_LESS;
+        break;
+    case GREAT:
+        redir->redir_type = REDIR_GREAT;
+        break;
+    case LESSGREAT:
+        redir->redir_type = REDIR_LESSGREAT;
+        break;
+    case DGREAT:
+        redir->redir_type = REDIR_DGREAT;
+        break;
+    case GREATAND:
+        redir->redir_type = REDIR_GREATAND;
+        break;
+    case LESSAND:
+        redir->redir_type = REDIR_LESSAND;
+        break;
+    case CLOBBER:
+        redir->redir_type  = REDIR_CLOBBER;
+        break;
+    default:
+        break;
+    }
+
+    redir->redir_op = strdup(parser_previous(p)->lexeme);
+
     if (!parser_match(p, 1, WORD))
-        return PARSER_ERROR;
+        goto error;
+
+    redir->file = strdup(parser_previous(p)->lexeme);
+
     return PARSER_OK;
+
+error:
+    fprintf(stderr, "error : parse_redirection\n");
+    free_ast(*res);
+    *res = NULL;
+    return PARSER_ERROR;
+}
+
+int parse_prefix(struct parser *p, struct ast **res)
+{
+    if (parse_redirection(p, res) != PARSER_OK)
+        goto error;
+
+    return PARSER_OK;
+
+error:
+    fprintf(stderr, "error : parse_prefix\n");
+    free_ast(*res);
+    *res = NULL;
+    return PARSER_ERROR;
 }
 
 int parse_simple_command(struct parser *p, struct ast **res)
@@ -193,24 +272,44 @@ int parse_simple_command(struct parser *p, struct ast **res)
     struct ast_simple_cmd *simple_cmd = ast_simple_cmd_alloc();
     simple_cmd->args = vector_new();
     *res = &(simple_cmd->base);
+    struct ast *tmp = NULL;
+
+    while (parser_check_mult(p, 8, IONUMBER, GREAT, LESS, DGREAT, GREATAND, 
+                LESSAND, CLOBBER, LESSGREAT))
+    {
+        if (parse_prefix(p, &tmp) != PARSER_OK)
+            goto error;
+        vector_append(&simple_cmd->redir_pref, tmp, sizeof(struct ast *));
+    }
 
     if (!parser_match(p, 1, WORD))
-        goto error;
+        return PARSER_OK;
 
     char *cmd_name = parser_previous(p) -> lexeme;
     vector_append(&simple_cmd->args, strdup(cmd_name), strlen(cmd_name));
 
-    while (parser_check(p, WORD))
+    while (parser_check_mult(p, 9, IONUMBER, WORD, GREAT, LESS, DGREAT, GREATAND, 
+                LESSAND, CLOBBER, LESSGREAT))
     {
-        parse_element(p, res);
-        struct token *prev = parser_previous(p);
-        char *arg = strdup(prev->lexeme);
-        vector_append(&simple_cmd->args, arg, strlen(arg));
+        if (parser_check(p, WORD))
+        {
+            parse_element(p, res);
+            struct token *prev = parser_previous(p);
+            char *arg = strdup(prev->lexeme);
+            vector_append(&simple_cmd->args, arg, strlen(arg));
+        }
+        else
+        {
+            if (parse_element(p, &tmp) != PARSER_OK)
+                goto error;
+            vector_append(&simple_cmd->redir_suff, tmp, sizeof(struct ast *));
+        }
     }
 
     return PARSER_OK;
 
 error:
+    fprintf(stderr, "error : parse_simple_command\n");
     free_ast(*res);
     *res = NULL;
     return PARSER_ERROR;
@@ -218,21 +317,43 @@ error:
 
 int parse_command(struct parser *p, struct ast **res)
 {
+    struct ast_cmd *ast_cmd = ast_cmd_alloc();
+    ast_cmd->redirections = vector_new();
+    *res = &(ast_cmd->base);
+
     int status = PARSER_OK;
 
-    switch (parser_peek(p)) 
+    if (parser_check_mult(p, 1, IF))
     {
-        case IF:
-            status = parse_shell_command(p, res);
-            break;
-        default:
-            status = parse_simple_command(p, res);
-            break;
+        status = parse_shell_command(p, &(ast_cmd->command));
+        while (parser_check_mult(p, 8, IONUMBER, GREAT, LESS, DGREAT, GREATAND, 
+                    LESSAND, CLOBBER, LESSGREAT))
+        {
+            struct ast *tmp;
+            status = parse_redirection(p, &tmp);
+            if (status != PARSER_OK)
+                break;
+            vector_append(&ast_cmd->redirections, tmp, sizeof(struct ast *));
+        }
+    }
+    else
+    {
+        status = parse_simple_command(p, &(ast_cmd->command));
     }
 
+    if (status != PARSER_OK)
+        goto error;
+
+    return status;
+
+error:
+    fprintf(stderr, "error: parse_command\n");
+    free_ast(*res);
+    *res = NULL;
     return status;
 }
 
+/*
 int parse_pipeline(struct parser *p, struct ast **res)
 {
     int status = PARSER_OK;
@@ -241,6 +362,55 @@ int parse_pipeline(struct parser *p, struct ast **res)
         return status;
 
     return PARSER_OK;
+}
+*/
+
+int parse_pipe(struct parser *p, struct ast **res)
+{
+    struct ast_pipe *pipe = ast_pipe_alloc();
+    *res = (&pipe->base);
+
+    int status = parse_command(p, &(pipe->left));
+
+    while (parser_match(p, 1, PIPE))
+    {
+        while (parser_match(p, 1, NEWLINE))
+            continue;
+        status = parse_pipe(p, &(pipe->right));
+        if (status != PARSER_OK)
+            break;
+    }
+
+    if (status != PARSER_OK)
+        goto error;
+
+    return status;
+
+error:
+    fprintf(stderr, "error: parse_pipe\n");
+    free_ast(*res);
+    *res = NULL;
+    return status;
+}
+
+int parse_pipeline(struct parser *p, struct ast **res)
+{
+    struct ast_pipeline *pipeline;
+    int status = PARSER_OK;
+
+    pipeline = ast_pipeline_alloc();
+    *res = (&pipeline->base);
+    status = parse_pipe(p, &(pipeline->pipe));
+
+    if (status != PARSER_OK)
+        goto error;
+
+    return status;
+error:
+    fprintf(stderr, "error: parse_pipeline\n");
+    free_ast(*res);
+    *res = NULL;
+    return status;
 }
 
 int parse_and_or(struct parser *p, struct ast **res)
@@ -287,6 +457,7 @@ int parse_compound_list(struct parser *p, struct ast **res)
     return status;
 
 error:
+    fprintf(stderr, "parser error: parse_coumpound_list\n");
     free_ast(&compound_list->base);
     *res = NULL;
     return status;
@@ -319,6 +490,7 @@ int parse_list(struct parser *p, struct ast **res)
     return PARSER_OK;
 
 error:
+    fprintf(stderr, "parser error: parse_list\n");
     free_ast(&list->base);
     *res = NULL;
     return status;

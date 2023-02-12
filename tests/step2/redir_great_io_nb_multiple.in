@@ -1,0 +1,16 @@
+cat heheheh > file2.txt
+tree > file12.txt
+
+echo toto > file.txt >> file2.txt >> file3.txt >file4.txt
+
+cat file4.txt
+
+echo baby baby baby ooooh >> file2.txt
+
+echo hehehe > file5.txt
+
+cat file2.txt > file5.txt
+
+cat file.txt; cat file2.txt;
+cat file3.txt
+                        cat file4.txt;

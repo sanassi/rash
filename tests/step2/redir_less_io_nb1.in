@@ -1,0 +1,2 @@
+echo . > file.txt
+ls 2< file.txt

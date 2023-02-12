@@ -18,7 +18,7 @@ static const char *operators[] =
 {
     "&", "&&", "(", ")", ";", ";;", "\n", "|",
     "||", ">", "<", ">|", "<<", ">>", "<&",
-    ">&", NULL,
+    ">&", "<>", NULL,
 };
 
 static struct hash_map *get_operators(void)

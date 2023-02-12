@@ -48,19 +48,16 @@ if __name__ == "__main__":
     binary_path = args.binary.absolute()
 
     ok_test = 0
-    #test_repo = "simple_test"
 
-    test_folders = ["./step1"]
-
-    #test_files = [join(test_repo, f) for f in listdir(test_repo) if isfile(join(test_repo, f))]
+    test_folders = ["./step1", "./step2"]
 
     for folder in test_folders:
         test_files = [join(folder, f) for f in listdir(folder) if isfile(join(folder, f))]
         print(f"{folder}:")
+        ok_test = 0
 
         for testcase in test_files:
             file = testcase
-
             sh_proc = run_shell(binary_path, file)
             sh_ref = run_shell("bash", "--posix", file)
             try:
@@ -71,21 +68,5 @@ if __name__ == "__main__":
                 ok_test += 1
                 print(f"{OK_TAG} {file}")
                 pass
-        print(f"{ok_test} / {len(test_files)}")
+        print(f"{ok_test} / {len(test_files)}\n")
 
-""""
-    for testcase in test_files:
-        file = testcase
-
-        sh_proc = run_shell(binary_path, file)
-        sh_ref = run_shell("bash", "--posix", file)
-        try:
-            perform_checks(sh_ref, sh_proc)
-        except AssertionError as err:
-            print(f"{KO_TAG} {file}\n{err}")
-        else:
-            ok_test += 1
-            print(f"{OK_TAG} {file}")
-            pass
-    print(f"{ok_test} / {len(test_files)}")
-"""""

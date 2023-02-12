@@ -4,6 +4,7 @@ struct vector *vector_new()
 {
     struct vector *v = calloc(1, sizeof(struct vector));
     v->capacity = 1;
+    v->size = 0;
     v->nodes = NULL;
     return v;
 }

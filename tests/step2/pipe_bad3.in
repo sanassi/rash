@@ -1,0 +1,1 @@
+echo toto | head -t 2

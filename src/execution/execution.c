@@ -1,10 +1,8 @@
 #include "execution.h"
 #include "builtins/bool.h"
-#include "builtins/echo.h"
-#include "../expansion/expansion.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "redir.h"
+#include <unistd.h>
+#include "pipeline.h"
 
 static const char *builtins_str[] = {
     "true", "false", "echo", NULL
@@ -29,7 +27,7 @@ struct builtin
 int builin_execute(char *builtin_name, struct vector *args)
 {
     if (str_equ(builtin_name, "true") || str_equ(builtin_name, "false"))
-        return strcmp(builtin_name, "true");
+        return strcmp(builtin_name, "true") ? true_builtin() : false_builtin();
 
     static struct builtin builtins[] =
     {
@@ -88,7 +86,13 @@ int simple_cmd_execute(struct ast *ast)
         vector_free(expanded);
     }
 
-    //char *cmd_name = vector_get_at(simple_cmd->args, 0);
+    int stdout_dup = dup(STDOUT_FILENO);
+    int stdin_dup = dup(STDIN_FILENO);
+    int stderr_dup = dup(STDERR_FILENO);
+
+    redirect(simple_cmd->redir_pref);
+    redirect(simple_cmd->redir_suff);
+
     char *cmd_name = vector_get_at(expanded_args, 0);
 
     if (is_builtin(cmd_name))
@@ -102,6 +106,8 @@ int simple_cmd_execute(struct ast *ast)
             free(args[i]);
         free(args);
     }
+
+    redirection_restore_fd(ast, stdout_dup, stdin_dup, stderr_dup);
 
     for (size_t i = 0; i < expanded_args->size; i++)
         free(vector_get_at(expanded_args, i));
@@ -135,6 +141,31 @@ int if_execute(struct ast *ast)
     return status;
 }
 
+int cmd_execute(struct ast *ast)
+{
+    struct ast_cmd *cmd = (struct ast_cmd *) ast;
+    
+    int stdout_dup = dup(STDOUT_FILENO);
+    int stdin_dup = dup(STDIN_FILENO);
+    int stderr_dup = dup(STDERR_FILENO);
+
+    redirect(cmd->redirections);
+
+    int status = run_ast(cmd->command);
+
+    undo_redirection(cmd->redirections);
+
+    dup2(stdin_dup, STDIN_FILENO);
+    dup2(stdout_dup, STDOUT_FILENO);
+    dup2(stderr_dup, STDERR_FILENO);
+
+    close(stdin_dup);
+    close(stdout_dup);
+    close(stderr_dup);
+
+    return status;
+}
+
 int run_ast(struct ast *ast)
 {
     if (!ast)
@@ -144,6 +175,9 @@ int run_ast(struct ast *ast)
         [AST_SIMPLE_CMD] = &simple_cmd_execute,
         [AST_CMD_LIST] = &cmd_list_execute,
         [AST_IF] = &if_execute,
+        [AST_CMD] = &cmd_execute,
+        [AST_PIPE] = &pipe_execute,
+        [AST_PIPELINE] = &pipeline_execute
     };
 
     return (*run_functions[ast->type])(ast);

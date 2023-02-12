@@ -1,0 +1,2 @@
+echo toto > file.trash
+cat file.trash

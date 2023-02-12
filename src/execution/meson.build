@@ -4,7 +4,11 @@ execution_src = files([
   'builtins/bool.c',
   'builtins/bool.h',
   'builtins/echo.c',
-  'builtins/echo.h'
+  'builtins/echo.h',
+  'redir.c',
+  'redir.h',
+  'pipeline.h',
+  'pipeline.c'
 ])
 
 execution_inc = include_directories('.')

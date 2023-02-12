@@ -1,0 +1,2 @@
+echo this is a text > file.trash
+cat file.trash

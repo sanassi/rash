@@ -1,0 +1,8 @@
+tree folder > file.txt; tree > file.txt
+echo toto
+
+cat file.txt
+
+if true;
+then echo heheh if still works
+fi

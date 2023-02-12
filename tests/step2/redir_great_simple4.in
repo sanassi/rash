@@ -1,0 +1,9 @@
+echo toto > file.txt
+echo tata > file2.txt
+
+echo hehehehehe >> file2.txt
+
+echo this is a text >> file2.txt
+
+cat file.txt
+cat file2.txt

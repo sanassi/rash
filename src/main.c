@@ -145,7 +145,7 @@ int main(int argc, char *argv[])
 
         status = run_ast(root);
 
-        if (status != true_builtin() && !args->input)
+        if (status == BUILTIN_ERR && !args->input)
             errx(status, "execution error");
 
         fflush(stream->fp);

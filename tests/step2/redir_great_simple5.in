@@ -1,0 +1,6 @@
+ls > file.txt
+
+cat file.txt
+
+echo awfgwgargqagqregqergqergqerg >> file.txt
+cat file.txt
