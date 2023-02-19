@@ -118,6 +118,16 @@ struct ast_neg
     struct ast *pipeline;
 };
 
+struct ast_and_or
+{
+    struct ast base;
+
+    enum ast_type type;
+
+    struct ast *left;
+    struct ast *right;
+};
+
 typedef void (*free_type)(struct ast *ast);
 typedef void (*print_type)(struct ast *ast);
 

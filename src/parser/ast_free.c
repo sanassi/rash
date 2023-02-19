@@ -105,6 +105,17 @@ static void free_neg(struct ast *ast)
     free(neg);
 }
 
+static void free_and_or(struct ast *ast)
+{
+    struct ast_and_or *and_or = (struct ast_and_or *) ast;
+
+    free_ast(and_or->left);
+    if (and_or->right)
+        free_ast(and_or->right);
+
+    free(and_or);
+}
+
 void free_ast(struct ast *ast)
 {
     if (!ast)
@@ -119,7 +130,8 @@ void free_ast(struct ast *ast)
         [AST_CMD] = &free_cmd,
         [AST_PIPE] = &free_pipe,
         [AST_PIPELINE] = &free_pipeline,
-        [AST_NEG] = &free_neg
+        [AST_NEG] = &free_neg,
+        [AST_AND_OR] = &free_and_or
     };
 
     (*free_functions[ast->type])(ast);

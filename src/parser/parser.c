@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <time.h>
 
 struct parser *parser_init(void)
 {
@@ -107,6 +108,7 @@ AST_ALLOC(cmd, AST_CMD)
 AST_ALLOC(pipe, AST_PIPE)
 AST_ALLOC(pipeline, AST_PIPELINE)
 AST_ALLOC(neg, AST_NEG)
+AST_ALLOC(and_or, AST_AND_OR)
 
 /*
  * forward declarations
@@ -426,12 +428,47 @@ error:
 
 int parse_and_or(struct parser *p, struct ast **res)
 {
+    struct ast *tmp = NULL;
     int status = PARSER_OK;
 
-    if ((status = parse_pipeline(p, res)) != PARSER_OK)
+    if ((status = parse_pipeline(p, &tmp)) != PARSER_OK)
+        goto error;
+
+    if (!parser_check_mult(p, 2, AND_IF, OR_IF))
+    {
+        *res = tmp;
         return status;
+    }
+
+    struct ast_and_or *root = NULL;
+
+    while (parser_check_mult(p, 2, AND_IF, OR_IF))
+    {
+        root = ast_and_or_alloc();
+        struct token *t = parser_advance(p);
+        root -> left = tmp;
+
+        if (t->type == AND_IF)
+            root -> type = AST_AND;
+        else
+            root->type = AST_OR;
+        status = parse_pipeline(p, &root->right);
+        if (status != PARSER_OK)
+            break;
+        tmp = (struct ast *) root;
+    }
+
+    *res = (struct ast *) tmp;
 
     return PARSER_OK;
+
+error:
+    fprintf(stderr, "error: parse and or");
+    free_ast(*res);
+    //free_ast((struct ast *) root);
+    //free(root);
+    *res = NULL;
+    return status;
 }
 
 int parse_compound_list(struct parser *p, struct ast **res)

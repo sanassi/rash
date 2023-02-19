@@ -99,6 +99,18 @@ static void print_neg(struct ast *ast)
     print_ast(neg->pipeline);
 }
 
+static void print_and_or(struct ast *ast)
+{
+    struct ast_and_or *and_or = (struct ast_and_or *) ast;
+    print_ast(and_or->left);
+
+    if (and_or->right)
+    {
+        printf("%s", and_or->type == AST_AND ? "&&" : "||");
+        print_ast(and_or->right);
+    }
+}
+
 void print_ast(struct ast *ast)
 {
     if (!ast)
@@ -112,7 +124,8 @@ void print_ast(struct ast *ast)
         [AST_CMD] = &print_cmd,
         [AST_PIPE] = &print_pipe,
         [AST_PIPELINE] = &print_pipeline,
-        [AST_NEG] = &print_neg
+        [AST_NEG] = &print_neg,
+        [AST_AND_OR] = &print_and_or
     };
 
     (*print_functions[ast->type])(ast);

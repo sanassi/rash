@@ -173,6 +173,23 @@ int neg_execute(struct ast *ast)
         true_builtin() ? false_builtin() : true_builtin();
 }
 
+int and_or_execute(struct ast *ast)
+{
+    struct ast_and_or *and_or = (struct ast_and_or *) ast;
+    int left_eval = run_ast(and_or->left);
+
+    if (and_or -> type == AST_AND)
+    {
+        if (left_eval != true_builtin())
+            return left_eval;
+        return run_ast(and_or->right);
+    }
+    
+    if (left_eval == true_builtin())
+        return true_builtin();
+    return run_ast(and_or->right);
+}
+
 int run_ast(struct ast *ast)
 {
     if (!ast)
@@ -185,7 +202,8 @@ int run_ast(struct ast *ast)
         [AST_CMD] = &cmd_execute,
         [AST_PIPE] = &pipe_execute,
         [AST_PIPELINE] = &pipeline_execute,
-        [AST_NEG] = &neg_execute
+        [AST_NEG] = &neg_execute,
+        [AST_AND_OR] = &and_or_execute
     };
 
     return (*run_functions[ast->type])(ast);
