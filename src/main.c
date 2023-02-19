@@ -128,30 +128,39 @@ int main(int argc, char *argv[])
     struct lexer *l = lexer_init();
 
     l->stream = stream;
-    int status = true_builtin();
 
-    while (!l->is_at_end)
+    int run_status = true_builtin();
+    int parse_status = true_builtin();
+
+    while (true)
     {
         struct parser *p = parser_init();
         p->lexer = l;
         struct ast *root = NULL;
 
-        status = parse_input(p, &root);
-        if (status == PARSER_ERROR && !args->input)
-            errx(status, "grammar error");
+        parse_status = parse_input(p, &root);
+
+        if (parse_status == PARSER_ERROR && !args->input)
+            errx(parse_status, "grammar error");
 
         if (args->pretty)
             print_ast(root);
 
-        status = run_ast(root);
+        if (root)
+            run_status = run_ast(root);
 
-        if (status == BUILTIN_ERR && !args->input)
-            errx(status, "execution error");
+        if (run_status == BUILTIN_ERR && !args->input)
+            errx(run_status, "execution error");
 
         fflush(stream->fp);
 
+        bool done = p->is_at_end;
+
         free_ast(root);
         parser_free(p);
+
+        if (done)
+            break;
     }
 
     for (size_t i = 0; i < l->tokens->size; i++)
@@ -161,5 +170,5 @@ int main(int argc, char *argv[])
     lexer_free(l);
     stream_free(stream);
     args_free(args);
-    return status;
+    return run_status;
 }

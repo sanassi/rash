@@ -1,10 +1,12 @@
 #include "pipeline.h"
+#include "builtins/bool.h"
 
 int pipe_exec_fork(struct ast *node, int fds[2],
                           enum pipe_side side)
 {
     if (!node)
         return true_builtin();
+
     fflush(stdout);
     int pid = fork();
     if (pid != 0)
@@ -42,7 +44,7 @@ int pipe_execute(struct ast *node)
     close(fds[0]);
     close(fds[1]);
 
-    int status;
+    int status = true_builtin();
 
     waitpid(pid_left, &status, 0);
     waitpid(pid_right, &status, 0);
