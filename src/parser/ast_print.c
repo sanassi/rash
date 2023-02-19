@@ -92,6 +92,13 @@ static void print_pipeline(struct ast *ast)
     print_ast(pipeline->pipe);
 }
 
+static void print_neg(struct ast *ast)
+{
+    struct ast_neg *neg = (struct ast_neg *) ast;
+    printf(" ! ");
+    print_ast(neg->pipeline);
+}
+
 void print_ast(struct ast *ast)
 {
     if (!ast)
@@ -104,7 +111,8 @@ void print_ast(struct ast *ast)
         [AST_REDIR] = &print_redir,
         [AST_CMD] = &print_cmd,
         [AST_PIPE] = &print_pipe,
-        [AST_PIPELINE] = &print_pipeline
+        [AST_PIPELINE] = &print_pipeline,
+        [AST_NEG] = &print_neg
     };
 
     (*print_functions[ast->type])(ast);

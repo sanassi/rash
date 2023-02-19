@@ -98,6 +98,13 @@ static void free_pipeline(struct ast *ast)
     free(pipeline);
 }
 
+static void free_neg(struct ast *ast)
+{
+    struct ast_neg *neg = (struct ast_neg *) ast;
+    free_ast(neg->pipeline);
+    free(neg);
+}
+
 void free_ast(struct ast *ast)
 {
     if (!ast)
@@ -111,7 +118,8 @@ void free_ast(struct ast *ast)
         [AST_REDIR] = &free_redir,
         [AST_CMD] = &free_cmd,
         [AST_PIPE] = &free_pipe,
-        [AST_PIPELINE] = &free_pipeline
+        [AST_PIPELINE] = &free_pipeline,
+        [AST_NEG] = &free_neg
     };
 
     (*free_functions[ast->type])(ast);

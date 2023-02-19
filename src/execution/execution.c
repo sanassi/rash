@@ -27,7 +27,7 @@ struct builtin
 int builin_execute(char *builtin_name, struct vector *args)
 {
     if (str_equ(builtin_name, "true") || str_equ(builtin_name, "false"))
-        return strcmp(builtin_name, "true") ? true_builtin() : false_builtin();
+        return strcmp(builtin_name, "true") == 0 ? true_builtin() : false_builtin();
 
     static struct builtin builtins[] =
     {
@@ -166,6 +166,13 @@ int cmd_execute(struct ast *ast)
     return status;
 }
 
+int neg_execute(struct ast *ast)
+{
+    struct ast_neg *neg = (struct ast_neg *) ast;
+    return run_ast(neg->pipeline) == 
+        true_builtin() ? false_builtin() : true_builtin();
+}
+
 int run_ast(struct ast *ast)
 {
     if (!ast)
@@ -177,7 +184,8 @@ int run_ast(struct ast *ast)
         [AST_IF] = &if_execute,
         [AST_CMD] = &cmd_execute,
         [AST_PIPE] = &pipe_execute,
-        [AST_PIPELINE] = &pipeline_execute
+        [AST_PIPELINE] = &pipeline_execute,
+        [AST_NEG] = &neg_execute
     };
 
     return (*run_functions[ast->type])(ast);

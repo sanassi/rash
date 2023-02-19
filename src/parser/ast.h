@@ -112,6 +112,12 @@ struct ast_pipeline
     struct ast *pipe;
 };
 
+struct ast_neg
+{
+    struct ast base;
+    struct ast *pipeline;
+};
+
 typedef void (*free_type)(struct ast *ast);
 typedef void (*print_type)(struct ast *ast);
 

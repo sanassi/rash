@@ -106,6 +106,7 @@ AST_ALLOC(redir, AST_REDIR)
 AST_ALLOC(cmd, AST_CMD)
 AST_ALLOC(pipe, AST_PIPE)
 AST_ALLOC(pipeline, AST_PIPELINE)
+AST_ALLOC(neg, AST_NEG)
 
 /*
  * forward declarations
@@ -333,7 +334,7 @@ int parse_command(struct parser *p, struct ast **res)
             status = parse_redirection(p, &tmp);
             if (status != PARSER_OK)
                 break;
-            vector_append(&ast_cmd->redirections, tmp, sizeof(struct ast *));
+            vector_append(&(ast_cmd->redirections), tmp, sizeof(struct ast *));
         }
     }
     else
@@ -368,7 +369,7 @@ int parse_pipeline(struct parser *p, struct ast **res)
 int parse_pipe(struct parser *p, struct ast **res)
 {
     struct ast_pipe *pipe = ast_pipe_alloc();
-    *res = (&pipe->base);
+    *res = &(pipe->base);
 
     int status = parse_command(p, &(pipe->left));
 
@@ -376,6 +377,7 @@ int parse_pipe(struct parser *p, struct ast **res)
     {
         while (parser_match(p, 1, NEWLINE))
             continue;
+
         status = parse_pipe(p, &(pipe->right));
         if (status != PARSER_OK)
             break;
@@ -398,9 +400,18 @@ int parse_pipeline(struct parser *p, struct ast **res)
     struct ast_pipeline *pipeline;
     int status = PARSER_OK;
 
-    pipeline = ast_pipeline_alloc();
-    *res = (&pipeline->base);
-    status = parse_pipe(p, &(pipeline->pipe));
+    if (parser_match(p, 1, BANG))
+    {
+        struct ast_neg *neg = ast_neg_alloc();
+        *res = &(neg->base);
+        status = parse_pipe(p, &(neg->pipeline));
+    }
+    else
+    {
+        pipeline = ast_pipeline_alloc();
+        *res = &(pipeline->base);
+        status = parse_pipe(p, &(pipeline->pipe));
+    }
 
     if (status != PARSER_OK)
         goto error;
