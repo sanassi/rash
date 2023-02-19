@@ -15,6 +15,8 @@ struct expander
     struct stream *stream;
     struct vector *output;
 
+    bool quoting;
+
     char **current_str;
 };
 

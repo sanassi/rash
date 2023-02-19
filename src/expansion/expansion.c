@@ -23,6 +23,24 @@ bool is_quote(char c)
     return c == '\'';
 }
 
+bool is_matching_quote(char c, char quote)
+{
+    return (quote == '\'' || quote == '"') && c == quote;
+}
+
+void single_quote_expand(struct expander *exp)
+{
+    stream_advance(exp->stream);
+
+    while (!is_quote(stream_peek(exp->stream)))
+    {
+        char cur = stream_advance(exp->stream);
+        *exp->current_str = my_str_cat(*exp->current_str, &cur, 1);
+    }
+    if (is_quote(stream_peek(exp->stream)))
+        stream_advance(exp->stream);
+}
+
 void expand_aux(struct expander *exp)
 {
     char c = stream_peek(exp->stream);
@@ -30,19 +48,22 @@ void expand_aux(struct expander *exp)
     if (c == EOF)
         return;
 
-    if (is_quote(c)) // only single quotes for now
+    if (c == '\'') // only single quotes for now
     {
-        stream_advance(exp->stream);
-
-        while (!is_quote(stream_peek(exp->stream)))
-        {
-            char cur = stream_advance(exp->stream);
-            *exp->current_str = my_str_cat(*exp->current_str, &cur, 1);
-        }
-        if (is_quote(stream_peek(exp->stream)))
-            stream_advance(exp->stream);
+        single_quote_expand(exp);
         expand_aux(exp);
         return;
+    }
+    else if (c == '"')
+    {
+       if (exp->quoting)
+           exp->quoting = false;
+       else
+           exp->quoting = true;
+
+       stream_advance(exp->stream);
+       expand_aux(exp);
+       return;
     }
     else if (c == '\\')
     {
