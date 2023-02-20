@@ -10,10 +10,10 @@ enum pipe_side
 };
 
 int pipe_exec_fork(struct ast *node, int fds[2],
-                          enum pipe_side side);
+                          enum pipe_side side, struct env *env);
 
-int pipe_execute(struct ast *node);
+int pipe_execute(struct ast *node, struct env *env);
 
-int pipeline_execute(struct ast *node);
+int pipeline_execute(struct ast *node, struct env *env);
 
 #endif /* ! PIPELINE_H */

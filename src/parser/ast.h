@@ -53,6 +53,8 @@ struct ast_simple_cmd
     struct ast base;
     struct vector *args;
 
+    struct vector *assignments;
+
     struct vector *redir_pref;
     struct vector *redir_suff;
 };
@@ -126,6 +128,14 @@ struct ast_and_or
 
     struct ast *left;
     struct ast *right;
+};
+
+struct ast_assign
+{
+    struct ast base;
+
+    char *id;
+    char *value;
 };
 
 typedef void (*free_type)(struct ast *ast);

@@ -11,6 +11,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include "env/env.h"
+#include "utils/utils.h"
 
 struct program_args
 {
@@ -124,6 +126,7 @@ int main(int argc, char *argv[])
 
     struct program_args *args = parse_cmd_line_args(argc, argv);
 
+    struct env *env = env_init();
     struct stream *stream = stream_open(args);
     struct lexer *l = lexer_init();
 
@@ -147,7 +150,7 @@ int main(int argc, char *argv[])
             print_ast(root);
 
         if (root)
-            run_status = run_ast(root);
+            run_status = run_ast(root, env);
 
         if (run_status == BUILTIN_ERR && !args->input)
             errx(run_status, "execution error");
@@ -166,6 +169,7 @@ int main(int argc, char *argv[])
     for (size_t i = 0; i < l->tokens->size; i++)
         token_free(l->tokens->nodes[i]->data);
 
+    env_free(env);
     vector_free(l->tokens);
     lexer_free(l);
     stream_free(stream);

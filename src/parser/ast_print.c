@@ -12,7 +12,14 @@ static void print_simple_command(struct ast *ast)
             print_ast(vector_get_at(simple_cmd->redir_pref, i));
     }
 
-    printf(" %s ", (char *) vector_get_at(simple_cmd->args, 0));
+    if (simple_cmd->assignments)
+    {
+        for (size_t i = 0; i < simple_cmd->assignments->size; i++)
+            print_ast(vector_get_at(simple_cmd->assignments, i));
+    }
+
+    if (simple_cmd->args && simple_cmd->args->size != 0)
+        printf(" %s ", (char *) vector_get_at(simple_cmd->args, 0));
 
     for (size_t i = 1; i < simple_cmd->args->size; i++)
         printf(" %s ", (char *) vector_get_at(simple_cmd->args, i));
@@ -27,12 +34,12 @@ static void print_simple_command(struct ast *ast)
 static void print_cmd_list(struct ast *ast)
 {
     struct ast_cmd_list *list = (struct ast_cmd_list *) ast;
-
     for (size_t i = 0; i < list->commands->size; i++)
     {
         print_ast(vector_get_at(list->commands, i));
         printf(" ; ");
     }
+
 }
 
 static void print_ast_if(struct ast *ast)
@@ -111,6 +118,12 @@ static void print_and_or(struct ast *ast)
     }
 }
 
+static void print_assign(struct ast *ast)
+{
+    struct ast_assign *assign = (struct ast_assign *) ast;
+    printf("%s = %s", assign->id, assign->value);
+}
+
 void print_ast(struct ast *ast)
 {
     if (!ast)
@@ -125,7 +138,8 @@ void print_ast(struct ast *ast)
         [AST_PIPE] = &print_pipe,
         [AST_PIPELINE] = &print_pipeline,
         [AST_NEG] = &print_neg,
-        [AST_AND_OR] = &print_and_or
+        [AST_AND_OR] = &print_and_or,
+        [AST_ASSIGN] = &print_assign
     };
 
     (*print_functions[ast->type])(ast);

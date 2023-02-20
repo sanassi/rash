@@ -27,6 +27,12 @@ static void free_simple_cmd(struct ast *ast)
         vector_free(simple_cmd->redir_suff);
     }
 
+    if (simple_cmd->assignments)
+    {
+        for (size_t i = 0; i < simple_cmd->assignments->size; i++)
+            free_ast(vector_get_at(simple_cmd->assignments, i));
+        vector_free(simple_cmd->assignments);
+    }
     vector_free(simple_cmd->args);
     free(simple_cmd);
 }
@@ -73,6 +79,7 @@ static void free_cmd(struct ast *ast)
 
     if (cmd->redirections)
     {
+
         for (size_t i = 0; i < cmd->redirections->size; i++)
             free_ast(vector_get_at(cmd->redirections, i));
     }
@@ -116,6 +123,15 @@ static void free_and_or(struct ast *ast)
     free(and_or);
 }
 
+static void free_assign(struct ast *ast)
+{
+    struct ast_assign *assign = (struct ast_assign *) ast;
+    free(assign->id);
+    free(assign->value);
+
+    free(assign);
+}
+
 void free_ast(struct ast *ast)
 {
     if (!ast)
@@ -131,7 +147,8 @@ void free_ast(struct ast *ast)
         [AST_PIPE] = &free_pipe,
         [AST_PIPELINE] = &free_pipeline,
         [AST_NEG] = &free_neg,
-        [AST_AND_OR] = &free_and_or
+        [AST_AND_OR] = &free_and_or,
+        [AST_ASSIGN] = &free_assign
     };
 
     (*free_functions[ast->type])(ast);

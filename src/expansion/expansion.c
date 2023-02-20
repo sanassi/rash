@@ -1,4 +1,5 @@
 #include "expansion.h"
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -20,7 +21,7 @@ void expander_free(struct expander *exp)
 
 bool is_quote(char c)
 {
-    return c == '\'';
+    return c == '\'' || c == '"';
 }
 
 bool is_matching_quote(char c, char quote)
@@ -41,7 +42,7 @@ void single_quote_expand(struct expander *exp)
         stream_advance(exp->stream);
 }
 
-void expand_aux(struct expander *exp)
+void expand_aux(struct expander *exp, struct env *env)
 {
     char c = stream_peek(exp->stream);
 
@@ -51,7 +52,7 @@ void expand_aux(struct expander *exp)
     if (c == '\'') // only single quotes for now
     {
         single_quote_expand(exp);
-        expand_aux(exp);
+        expand_aux(exp, env);
         return;
     }
     else if (c == '"')
@@ -62,7 +63,7 @@ void expand_aux(struct expander *exp)
            exp->quoting = true;
 
        stream_advance(exp->stream);
-       expand_aux(exp);
+       expand_aux(exp, env);
        return;
     }
     else if (c == '\\')
@@ -70,19 +71,53 @@ void expand_aux(struct expander *exp)
         stream_advance(exp->stream);
         char cur = stream_advance(exp->stream);
         *exp->current_str = my_str_cat(*exp->current_str, &cur, 1);
-        expand_aux(exp);
+        expand_aux(exp, env);
         return;
+    }
+    else if (c == '$')
+    {
+        exp->expanding = true;
+        stream_advance(exp->stream);
+
+        if (stream_peek(exp->stream) == '{')
+        {
+
+        }
+        else if (stream_peek(exp->stream) == '(')
+            printf("other stuff\n");
+        else
+        {
+            char *to_replace = NULL;
+            char cur;
+            while ((cur = stream_peek(exp->stream)) != EOF)
+            {
+                if (isspace(cur) || is_quote(cur) || cur == '$')
+                    break;
+                to_replace = my_str_cat(to_replace, &cur, 1);
+                stream_advance(exp->stream);
+            }
+
+            char *value = env_get_variable(env, to_replace);
+            if (value)
+                *exp->current_str = 
+                    my_str_cat(*exp->current_str, value, strlen(value) + 1);
+            free(value);
+            free(to_replace);
+
+            expand_aux(exp, env);
+            return;
+        }
     }
     else
     {
         *exp->current_str = my_str_cat(*exp->current_str, &c, 1);
         stream_advance(exp->stream);
-        expand_aux(exp);
+        expand_aux(exp, env);
         return;
     }
 }
 
-struct vector *expand(char *str)
+struct vector *expand(char *str, struct env *env)
 {
     struct vector *res = vector_new();
     struct stream *stream = stream_open_string(str);
@@ -90,10 +125,11 @@ struct vector *expand(char *str)
 
     exp->stream = stream;
 
-    expand_aux(exp);
+    expand_aux(exp, env);
 
-    vector_append(&res, strdup(*exp->current_str), 
-            strlen(*exp->current_str) + 1);
+    if (*exp->current_str)
+        vector_append(&res, strdup(*exp->current_str),
+                strlen(*exp->current_str) + 1);
 
     expander_free(exp);
 

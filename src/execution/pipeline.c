@@ -2,7 +2,7 @@
 #include "builtins/bool.h"
 
 int pipe_exec_fork(struct ast *node, int fds[2],
-                          enum pipe_side side)
+                          enum pipe_side side, struct env *env)
 {
     if (!node)
         return true_builtin();
@@ -23,23 +23,23 @@ int pipe_exec_fork(struct ast *node, int fds[2],
 
     close(fds[other_side]);
 
-    exit(run_ast(node));
+    exit(run_ast(node, env));
 }
 
-int pipe_execute(struct ast *node)
+int pipe_execute(struct ast *node, struct env *env)
 {
     struct ast_pipe *pipe_node = (struct ast_pipe *)node;
 
     if (!pipe_node->left)
-        return run_ast(pipe_node->right);
+        return run_ast(pipe_node->right, env);
     if (!pipe_node->right)
-        return run_ast(pipe_node->left);
+        return run_ast(pipe_node->left, env);
 
     int fds[2];
     pipe(fds);
 
-    int pid_left = pipe_exec_fork(pipe_node->left, fds, LEFT);
-    int pid_right = pipe_exec_fork(pipe_node->right, fds, RIGHT);
+    int pid_left = pipe_exec_fork(pipe_node->left, fds, LEFT, env);
+    int pid_right = pipe_exec_fork(pipe_node->right, fds, RIGHT, env);
 
     close(fds[0]);
     close(fds[1]);
@@ -55,8 +55,8 @@ int pipe_execute(struct ast *node)
     return true_builtin();
 }
 
-int pipeline_execute(struct ast *node)
+int pipeline_execute(struct ast *node, struct env *env)
 {
     struct ast_pipeline *pipeline_node = (struct ast_pipeline *)node;
-    return run_ast(pipeline_node->pipe);
+    return run_ast(pipeline_node->pipe, env);
 }

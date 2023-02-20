@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 struct parser *parser_init(void)
@@ -109,6 +110,7 @@ AST_ALLOC(pipe, AST_PIPE)
 AST_ALLOC(pipeline, AST_PIPELINE)
 AST_ALLOC(neg, AST_NEG)
 AST_ALLOC(and_or, AST_AND_OR)
+AST_ALLOC(assign, AST_ASSIGN)
 
 /*
  * forward declarations
@@ -258,7 +260,19 @@ error:
 
 int parse_prefix(struct parser *p, struct ast **res)
 {
-    if (parse_redirection(p, res) != PARSER_OK)
+    if (parser_match(p, 1, ASSIGNMENT_WORD))
+    {
+        struct ast_assign *assign = ast_assign_alloc();
+        *res = &(assign->base);
+        char *lexeme = parser_previous(p)->lexeme;
+
+        char *equal_pos = strstr(lexeme, "=");
+        size_t equal_index = equal_pos - lexeme;
+
+        assign->id = get_substr(lexeme, 0, equal_index); 
+        assign->value = strdup(equal_pos + 1); 
+    }
+    else if (parse_redirection(p, res) != PARSER_OK)
         goto error;
 
     return PARSER_OK;
@@ -277,12 +291,22 @@ int parse_simple_command(struct parser *p, struct ast **res)
     *res = &(simple_cmd->base);
     struct ast *tmp = NULL;
 
-    while (parser_check_mult(p, 8, IONUMBER, GREAT, LESS, DGREAT, GREATAND, 
+    while (parser_check_mult(p, 9, ASSIGNMENT_WORD, IONUMBER, GREAT, 
+                LESS, DGREAT, GREATAND, 
                 LESSAND, CLOBBER, LESSGREAT))
     {
-        if (parse_prefix(p, &tmp) != PARSER_OK)
-            goto error;
-        vector_append(&simple_cmd->redir_pref, tmp, sizeof(struct ast *));
+        if (parser_check(p, ASSIGNMENT_WORD))
+        {
+            if (parse_prefix(p, &tmp) != PARSER_OK)
+                goto error;
+            vector_append(&simple_cmd->assignments, tmp, sizeof(struct ast *));
+        }
+        else
+        {
+            if (parse_prefix(p, &tmp) != PARSER_OK)
+                goto error;
+            vector_append(&simple_cmd->redir_pref, tmp, sizeof(struct ast *));
+        }
     }
 
     if (!parser_match(p, 1, WORD))
@@ -329,6 +353,7 @@ int parse_command(struct parser *p, struct ast **res)
     if (parser_check_mult(p, 1, IF))
     {
         status = parse_shell_command(p, &(ast_cmd->command));
+
         while (parser_check_mult(p, 8, IONUMBER, GREAT, LESS, DGREAT, GREATAND, 
                     LESSAND, CLOBBER, LESSGREAT))
         {
@@ -465,8 +490,6 @@ int parse_and_or(struct parser *p, struct ast **res)
 error:
     fprintf(stderr, "error: parse and or");
     free_ast(*res);
-    //free_ast((struct ast *) root);
-    //free(root);
     *res = NULL;
     return status;
 }

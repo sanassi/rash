@@ -4,13 +4,12 @@
 
 int main(int argc, char *argv[])
 {
-    if (argc != 2)
-        return 1;
-
+    (void) argc;
+    (void) argv;
     struct lexer *l = lexer_init();
     l->stream = stream_open_string(argv[1]);
 
-    while (!l->is_at_end)
+    while (true)
     {
         printf("expected next token:\n");
         token_print(lexer_look_next_token(l));
@@ -18,6 +17,8 @@ int main(int argc, char *argv[])
         struct token *t = lexer_get_next_token(l);
         token_print(t);
         printf("\n");
+        if (t->type == END)
+            break;
     }
 
     stream_free(l->stream);

@@ -1,6 +1,8 @@
 #include "execution.h"
 #include "builtins/bool.h"
 #include "redir.h"
+#include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include "pipeline.h"
 
@@ -69,21 +71,31 @@ int fork_and_execute(char **args)
     return true_builtin();
 }
 
-int simple_cmd_execute(struct ast *ast)
+int simple_cmd_execute(struct ast *ast, struct env *env)
 {
     struct ast_simple_cmd *simple_cmd = (struct ast_simple_cmd *) ast;
     struct vector *expanded_args = vector_new();
-    int status;
+    int status = true_builtin();
 
     for (size_t i = 0; i < simple_cmd->args->size; i++)
     {
-        struct vector *expanded = expand(vector_get_at(simple_cmd->args, i));
+        struct vector *expanded = 
+            expand(vector_get_at(simple_cmd->args, i), env);
         for (size_t j = 0; j < expanded->size; j++)
         {
             char *str = vector_get_at(expanded, j);
             vector_append(&expanded_args, str, strlen(str) + 1);
         }
         vector_free(expanded);
+    }
+
+    if (simple_cmd->assignments)
+    {
+        for (size_t i = 0; i < simple_cmd->assignments->size; i++)
+        {
+            run_ast(vector_get_at(simple_cmd->assignments, 
+                        i), env);
+        }
     }
 
     int stdout_dup = dup(STDOUT_FILENO);
@@ -93,18 +105,21 @@ int simple_cmd_execute(struct ast *ast)
     redirect(simple_cmd->redir_pref);
     redirect(simple_cmd->redir_suff);
 
-    char *cmd_name = vector_get_at(expanded_args, 0);
-
-    if (is_builtin(cmd_name))
-        status = builin_execute(cmd_name, expanded_args);
-    else
+    if (expanded_args->size != 0)
     {
-        char **args = vector_convert_str_arr(expanded_args, true);
-        status = fork_and_execute(args);
+        char *cmd_name = vector_get_at(expanded_args, 0);
 
-        for (size_t i = 0; args[i]; i++)
-            free(args[i]);
-        free(args);
+        if (is_builtin(cmd_name))
+            status = builin_execute(cmd_name, expanded_args);
+        else
+        {
+            char **args = vector_convert_str_arr(expanded_args, true);
+            status = fork_and_execute(args);
+
+            for (size_t i = 0; args[i]; i++)
+                free(args[i]);
+            free(args);
+        }
     }
 
     redirection_restore_fd(ast, stdout_dup, stdin_dup, stderr_dup);
@@ -116,32 +131,32 @@ int simple_cmd_execute(struct ast *ast)
     return status;
 }
 
-int cmd_list_execute(struct ast *ast)
+int cmd_list_execute(struct ast *ast, struct env *env)
 {
     struct ast_cmd_list *list = (struct ast_cmd_list *) ast;
     int status = true_builtin();
     for (size_t i = 0; i < list->commands->size; i++)
-        status = run_ast(vector_get_at(list->commands, i));
+        status = run_ast(vector_get_at(list->commands, i), env);
 
     return status;
 }
 
-int if_execute(struct ast *ast)
+int if_execute(struct ast *ast, struct env *env)
 {
     struct ast_if *if_node = (struct ast_if *) ast;
 
     int status = true_builtin();
     int condition_status;
 
-    if ((condition_status = run_ast(if_node->condition)) == true_builtin())
-        status = run_ast(if_node->body);
+    if ((condition_status = run_ast(if_node->condition, env)) == true_builtin())
+        status = run_ast(if_node->body, env);
     else if (if_node->else_body)
-        status = run_ast(if_node->else_body);
+        status = run_ast(if_node->else_body, env);
 
     return status;
 }
 
-int cmd_execute(struct ast *ast)
+int cmd_execute(struct ast *ast, struct env *env)
 {
     struct ast_cmd *cmd = (struct ast_cmd *) ast;
     
@@ -151,7 +166,7 @@ int cmd_execute(struct ast *ast)
 
     redirect(cmd->redirections);
 
-    int status = run_ast(cmd->command);
+    int status = run_ast(cmd->command, env);
 
     undo_redirection(cmd->redirections);
 
@@ -166,31 +181,54 @@ int cmd_execute(struct ast *ast)
     return status;
 }
 
-int neg_execute(struct ast *ast)
+int neg_execute(struct ast *ast, struct env *env)
 {
     struct ast_neg *neg = (struct ast_neg *) ast;
-    return run_ast(neg->pipeline) == 
+    return run_ast(neg->pipeline, env) == 
         true_builtin() ? false_builtin() : true_builtin();
 }
 
-int and_or_execute(struct ast *ast)
+int and_or_execute(struct ast *ast, struct env *env)
 {
     struct ast_and_or *and_or = (struct ast_and_or *) ast;
-    int left_eval = run_ast(and_or->left);
+    int left_eval = run_ast(and_or->left, env);
 
     if (and_or -> type == AST_AND)
     {
         if (left_eval != true_builtin())
             return left_eval;
-        return run_ast(and_or->right);
+        return run_ast(and_or->right, env);
     }
     
     if (left_eval == true_builtin())
         return true_builtin();
-    return run_ast(and_or->right);
+    return run_ast(and_or->right, env);
 }
 
-int run_ast(struct ast *ast)
+int assignment_execute(struct ast *ast, struct env *env)
+{
+    struct ast_assign *assign = (struct ast_assign *) ast;
+    struct vector *expanded_value = expand(assign->value, env);
+
+    char *concat_value = NULL;
+    for (size_t i = 0; i < expanded_value->size; i++)
+    {
+        char *value = vector_get_at(expanded_value, i);
+        concat_value = my_str_cat(concat_value, value, strlen(value) + 1);
+    }
+
+    env_add_variable(env, assign->id, concat_value);
+
+    free(concat_value);
+
+    for (size_t i = 0; i < expanded_value->size; i++)
+        free(vector_get_at(expanded_value, i));
+    vector_free(expanded_value);
+
+    return true_builtin();
+}
+
+int run_ast(struct ast *ast, struct env *env)
 {
     if (!ast)
         return true_builtin();
@@ -203,8 +241,9 @@ int run_ast(struct ast *ast)
         [AST_PIPE] = &pipe_execute,
         [AST_PIPELINE] = &pipeline_execute,
         [AST_NEG] = &neg_execute,
-        [AST_AND_OR] = &and_or_execute
+        [AST_AND_OR] = &and_or_execute,
+        [AST_ASSIGN] = &assignment_execute
     };
 
-    return (*run_functions[ast->type])(ast);
+    return (*run_functions[ast->type])(ast, env);
 }
