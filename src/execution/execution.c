@@ -228,6 +228,32 @@ int assignment_execute(struct ast *ast, struct env *env)
     return true_builtin();
 }
 
+int while_execute(struct ast *ast, struct env *env)
+{
+    struct ast_while *while_node = (struct ast_while *) ast;
+
+    int status = true_builtin();
+    while (run_ast(while_node->condition, env) == true_builtin())
+    {
+        status = run_ast(while_node->body, env);
+    }
+
+    return status;
+}
+
+int until_execute(struct ast *ast, struct env *env)
+{
+    struct ast_until *until_node = (struct ast_until *) ast;
+
+    int status = true_builtin();
+    while (run_ast(until_node->condition, env) == false_builtin())
+    {
+        status = run_ast(until_node->body, env);
+    }
+
+    return status;
+}
+
 int run_ast(struct ast *ast, struct env *env)
 {
     if (!ast)
@@ -242,7 +268,9 @@ int run_ast(struct ast *ast, struct env *env)
         [AST_PIPELINE] = &pipeline_execute,
         [AST_NEG] = &neg_execute,
         [AST_AND_OR] = &and_or_execute,
-        [AST_ASSIGN] = &assignment_execute
+        [AST_ASSIGN] = &assignment_execute,
+        [AST_WHILE] = &while_execute,
+        [AST_UNTIL] = &until_execute
     };
 
     return (*run_functions[ast->type])(ast, env);

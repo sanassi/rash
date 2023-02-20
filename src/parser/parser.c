@@ -111,6 +111,8 @@ AST_ALLOC(pipeline, AST_PIPELINE)
 AST_ALLOC(neg, AST_NEG)
 AST_ALLOC(and_or, AST_AND_OR)
 AST_ALLOC(assign, AST_ASSIGN)
+AST_ALLOC(while, AST_WHILE)
+AST_ALLOC(until, AST_UNTIL)
 
 /*
  * forward declarations
@@ -120,6 +122,68 @@ int parse_compound_list(struct parser *p, struct ast **res);
 int parse_and_or(struct parser *p, struct ast **res);
 int parse_if(struct parser *p, struct ast **res, bool expect_fi);
 int parse_redirection(struct parser *p, struct ast **res);
+
+int parse_while(struct parser *p, struct ast **res)
+{
+    struct ast_while *while_node = ast_while_alloc();
+    *res = &(while_node->base);
+
+    int status = PARSER_OK;
+
+    if (!parser_match(p, 1, WHILE))
+        goto error;
+
+    if ((status = parse_compound_list(p, &(while_node->condition))) != PARSER_OK)
+        goto error;
+
+    if (!parser_match(p, 1, DO))
+        goto error;
+
+    if ((status = parse_compound_list(p, &(while_node->body))) != PARSER_OK)
+        goto error;
+
+    if (!parser_match(p, 1, DONE))
+        goto error;
+
+    return status;
+
+error:
+    fprintf(stderr, "error: parse while\n");
+    free_ast(*res);
+    *res = NULL;
+    return PARSER_ERROR;
+}
+
+int parse_until(struct parser *p, struct ast **res)
+{
+    struct ast_until *until_node = ast_until_alloc();
+    *res = &(until_node->base);
+
+    int status = PARSER_OK;
+
+    if (!parser_match(p, 1, UNTIL))
+        goto error;
+
+    if ((status = parse_compound_list(p, &(until_node->condition))) != PARSER_OK)
+        goto error;
+
+    if (!parser_match(p, 1, DO))
+        goto error;
+
+    if ((status = parse_compound_list(p, &(until_node->body))) != PARSER_OK)
+        goto error;
+
+    if (!parser_match(p, 1, DONE))
+        goto error;
+
+    return status;
+
+error:
+    fprintf(stderr, "error: parse until\n");
+    free_ast(*res);
+    *res = NULL;
+    return PARSER_ERROR;
+}
 
 int parse_else(struct parser *p, struct ast **res)
 {
@@ -183,12 +247,27 @@ int parse_shell_command(struct parser *p, struct ast **res)
         case IF:
             status = parse_if(p, res, true);
             break;
+        case WHILE:
+            status = parse_while(p, res);
+            break;
+        case UNTIL:
+            status = parse_until(p, res);
+            break;
         default:
             status = PARSER_ERROR;
             break;
     }
 
+    if (status != PARSER_OK)
+        goto error;
+
     return status;
+
+error:
+    fprintf(stderr, "error: parse shell command");
+    free_ast(*res);
+    *res = NULL;
+    return PARSER_ERROR;
 }
 
 int parse_element(struct parser *p, struct ast **res)
@@ -291,10 +370,13 @@ int parse_simple_command(struct parser *p, struct ast **res)
     *res = &(simple_cmd->base);
     struct ast *tmp = NULL;
 
+    bool has_prefix = false;
+
     while (parser_check_mult(p, 9, ASSIGNMENT_WORD, IONUMBER, GREAT, 
                 LESS, DGREAT, GREATAND, 
                 LESSAND, CLOBBER, LESSGREAT))
     {
+        has_prefix = true;
         if (parser_check(p, ASSIGNMENT_WORD))
         {
             if (parse_prefix(p, &tmp) != PARSER_OK)
@@ -309,8 +391,15 @@ int parse_simple_command(struct parser *p, struct ast **res)
         }
     }
 
+    if (has_prefix && !parser_check(p, WORD))
+        return PARSER_OK;
+    /*
     if (!parser_match(p, 1, WORD))
         return PARSER_OK;
+    */
+
+    if (!parser_match(p, 1, WORD))
+        goto error;
 
     char *cmd_name = parser_previous(p) -> lexeme;
     vector_append(&simple_cmd->args, strdup(cmd_name), strlen(cmd_name));
@@ -350,7 +439,7 @@ int parse_command(struct parser *p, struct ast **res)
 
     int status = PARSER_OK;
 
-    if (parser_check_mult(p, 1, IF))
+    if (parser_check_mult(p, 3, IF, WHILE, UNTIL))
     {
         status = parse_shell_command(p, &(ast_cmd->command));
 
@@ -380,18 +469,6 @@ error:
     *res = NULL;
     return status;
 }
-
-/*
-int parse_pipeline(struct parser *p, struct ast **res)
-{
-    int status = PARSER_OK;
-
-    if ((status = parse_command(p, res)) != PARSER_OK)
-        return status;
-
-    return PARSER_OK;
-}
-*/
 
 int parse_pipe(struct parser *p, struct ast **res)
 {
@@ -516,7 +593,7 @@ int parse_compound_list(struct parser *p, struct ast **res)
         while (parser_match(p, 1, NEWLINE))
             continue;
 
-        if (parser_check_mult(p, 4, THEN, FI, ELIF, ELSE))
+        if (parser_check_mult(p, 6, THEN, FI, ELIF, ELSE, DO, DONE))
             break;
 
         if ((status = parse_and_or(p, &tmp)) != PARSER_OK)
@@ -562,7 +639,7 @@ int parse_list(struct parser *p, struct ast **res)
 
 error:
     fprintf(stderr, "parser error: parse_list\n");
-    free_ast(&list->base);
+    free_ast(*res);
     *res = NULL;
     return status;
 }

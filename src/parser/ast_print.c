@@ -124,6 +124,25 @@ static void print_assign(struct ast *ast)
     printf("%s = %s", assign->id, assign->value);
 }
 
+static void print_while(struct ast *ast)
+{
+    struct ast_while *while_node = (struct ast_while *) ast;
+    printf("while ");
+    print_ast(while_node->condition);
+    printf("do\n");
+    print_ast(while_node->body);
+    printf("done\n");
+}
+
+static void print_until(struct ast *ast)
+{
+    struct ast_until *until_node = (struct ast_until *) ast;
+    printf("while ");
+    print_ast(until_node->condition);
+    printf("do\n");
+    print_ast(until_node->body);
+    printf("done\n");
+}
 void print_ast(struct ast *ast)
 {
     if (!ast)
@@ -139,7 +158,9 @@ void print_ast(struct ast *ast)
         [AST_PIPELINE] = &print_pipeline,
         [AST_NEG] = &print_neg,
         [AST_AND_OR] = &print_and_or,
-        [AST_ASSIGN] = &print_assign
+        [AST_ASSIGN] = &print_assign,
+        [AST_UNTIL] = &print_until,
+        [AST_WHILE] = &print_while
     };
 
     (*print_functions[ast->type])(ast);

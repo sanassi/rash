@@ -138,6 +138,22 @@ struct ast_assign
     char *value;
 };
 
+struct ast_while
+{
+    struct ast base;
+
+    struct ast *condition;
+    struct ast *body;
+};
+
+struct ast_until 
+{
+    struct ast base;
+
+    struct ast *condition;
+    struct ast *body;
+};
+
 typedef void (*free_type)(struct ast *ast);
 typedef void (*print_type)(struct ast *ast);
 

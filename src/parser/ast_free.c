@@ -132,6 +132,25 @@ static void free_assign(struct ast *ast)
     free(assign);
 }
 
+static void free_while(struct ast *ast)
+{
+    struct ast_while *while_node = (struct ast_while *) ast;
+    free_ast(while_node->body);
+    free_ast(while_node->condition);
+
+    free(while_node);
+}
+
+static void free_until(struct ast *ast)
+{
+    struct ast_until *until_node = (struct ast_until *) ast;
+    free_ast(until_node->body);
+    free_ast(until_node->condition);
+
+    free(until_node);
+}
+
+
 void free_ast(struct ast *ast)
 {
     if (!ast)
@@ -148,7 +167,9 @@ void free_ast(struct ast *ast)
         [AST_PIPELINE] = &free_pipeline,
         [AST_NEG] = &free_neg,
         [AST_AND_OR] = &free_and_or,
-        [AST_ASSIGN] = &free_assign
+        [AST_ASSIGN] = &free_assign,
+        [AST_WHILE] = &free_while,
+        [AST_UNTIL] = &free_until
     };
 
     (*free_functions[ast->type])(ast);

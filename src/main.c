@@ -135,6 +135,11 @@ int main(int argc, char *argv[])
     int run_status = true_builtin();
     int parse_status = true_builtin();
 
+    if (args->file)
+        env_set_special_variables(env, argc - 1, argv + 1);
+    if (args->string)
+        env_set_special_variables(env, argc - 3, argv + 3);
+
     while (true)
     {
         struct parser *p = parser_init();
