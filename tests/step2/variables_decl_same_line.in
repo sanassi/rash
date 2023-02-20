@@ -1,0 +1,3 @@
+a=4 toto=heheh day=good tired=true
+
+echo $a $toto $day $tired

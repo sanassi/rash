@@ -1,0 +1,2 @@
+a="toto is tata yes"
+echo $a

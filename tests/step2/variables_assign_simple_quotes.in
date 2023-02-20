@@ -1,0 +1,2 @@
+a='toto'
+echo $a

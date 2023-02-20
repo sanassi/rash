@@ -1,0 +1,5 @@
+if true || false; then
+    a=42
+fi
+
+echo $a
