@@ -81,11 +81,13 @@ void expand_aux(struct expander *exp, struct env *env)
 
         if (stream_peek(exp->stream) == '{')
         {
-
+            /*TODO : implement :\ */
         }
         else if (stream_peek(exp->stream) == '(')
-            printf("other stuff\n");
-        else
+        {
+            /*TODO : implement .. \: */
+        }
+        else /*simple var subsitution : $toto */
         {
             char *to_replace = NULL;
             char cur;
