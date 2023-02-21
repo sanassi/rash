@@ -49,7 +49,7 @@ if __name__ == "__main__":
 
     ok_test = 0
 
-    test_folders = ["./step1", "./step2"]
+    test_folders = ["./step1", "./step2", "./step3"]
 
     for folder in test_folders:
         test_files = [join(folder, f) for f in listdir(folder) if isfile(join(folder, f))]
