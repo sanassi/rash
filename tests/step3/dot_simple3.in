@@ -1,0 +1,4 @@
+a=6
+. ./variables_simple.in
+echo $a
+echo $b

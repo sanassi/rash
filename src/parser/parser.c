@@ -297,21 +297,29 @@ int parse_shell_command(struct parser *p, struct ast **res)
 
     switch (parser_peek(p)) 
     {
-        case IF:
-            status = parse_if(p, res, true);
-            break;
-        case WHILE:
-            status = parse_while(p, res);
-            break;
-        case UNTIL:
-            status = parse_until(p, res);
-            break;
-        case FOR:
-            status = parse_for(p, res);
-            break;
-        default:
+    case IF:
+        status = parse_if(p, res, true);
+        break;
+    case WHILE:
+        status = parse_while(p, res);
+        break;
+    case UNTIL:
+        status = parse_until(p, res);
+        break;
+    case FOR:
+        status = parse_for(p, res);
+        break;
+    case LBRACE:
+        parser_advance(p);
+        status = parse_compound_list(p, res);
+        if (status != PARSER_OK)
+            goto error;
+        if (!parser_match(p, 1, RBRACE))
             status = PARSER_ERROR;
-            break;
+        break;
+    default:
+        status = PARSER_ERROR;
+        break;
     }
 
     if (status != PARSER_OK)
@@ -495,7 +503,7 @@ int parse_command(struct parser *p, struct ast **res)
 
     int status = PARSER_OK;
 
-    if (parser_check_mult(p, 4, IF, WHILE, UNTIL, FOR))
+    if (parser_check_mult(p, 5, IF, WHILE, UNTIL, FOR, LBRACE))
     {
         status = parse_shell_command(p, &(ast_cmd->command));
 
@@ -649,7 +657,7 @@ int parse_compound_list(struct parser *p, struct ast **res)
         while (parser_match(p, 1, NEWLINE))
             continue;
 
-        if (parser_check_mult(p, 6, THEN, FI, ELIF, ELSE, DO, DONE))
+        if (parser_check_mult(p, 7, THEN, FI, ELIF, ELSE, DO, DONE, RBRACE))
             break;
 
         if ((status = parse_and_or(p, &tmp)) != PARSER_OK)

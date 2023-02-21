@@ -1,0 +1,1 @@
+{ echo a; ech b; } > error.txt
