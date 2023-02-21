@@ -1,0 +1,5 @@
+for i in 1 2 3 4 toto; do
+    for j in 4 5 6 7; do
+        break 42;
+    done
+done

@@ -1,0 +1,7 @@
+for i in 1 2 3 4 5 6 7; do
+    for j in tot hahah hehehee; do
+        echo $j $i
+        break;
+        echo heheh;
+    done
+done

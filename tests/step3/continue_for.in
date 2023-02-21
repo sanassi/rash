@@ -1,0 +1,8 @@
+while true; do
+    while true; do
+        break;
+        echo heheh;
+    done
+    echo hehe;
+    break;
+done
