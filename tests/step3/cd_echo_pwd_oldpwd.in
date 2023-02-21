@@ -1,0 +1,7 @@
+echo $PWD
+cd ..
+echo $OLDPWD
+echo $PWD
+cd ../../
+echo $PWD
+echo $OLDPWD
