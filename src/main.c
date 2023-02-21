@@ -137,8 +137,10 @@ int main(int argc, char *argv[])
 
     if (args->file)
         env_set_special_variables(env, argc - 1, argv + 1);
-    if (args->string)
+    else if (args->string)
         env_set_special_variables(env, argc - 3, argv + 3);
+    else
+        env_set_special_variables(env, 0, NULL);
 
     while (true)
     {

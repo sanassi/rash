@@ -4,9 +4,12 @@
 #include "../utils/hash_map/hash_map.h"
 #include "../utils/vector/vector.h"
 #include "../utils/utils.h"
+#include <sys/types.h>
+#include <unistd.h>
 
 struct env
 {
+    size_t argc;
     struct hash_map *variables;
 };
 

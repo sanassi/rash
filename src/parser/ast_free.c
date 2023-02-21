@@ -150,6 +150,21 @@ static void free_until(struct ast *ast)
     free(until_node);
 }
 
+static void free_for(struct ast *ast)
+{
+    struct ast_for *for_node = (struct ast_for *) ast;
+    free(for_node->loop_word);
+
+    if (for_node->words)
+    {
+        for (size_t i = 0; i < for_node->words->size; i++)
+            free(vector_get_at(for_node->words, i));
+        vector_free(for_node->words);
+    }
+
+    free_ast(for_node->body);
+    free(for_node);
+}
 
 void free_ast(struct ast *ast)
 {
@@ -169,7 +184,8 @@ void free_ast(struct ast *ast)
         [AST_AND_OR] = &free_and_or,
         [AST_ASSIGN] = &free_assign,
         [AST_WHILE] = &free_while,
-        [AST_UNTIL] = &free_until
+        [AST_UNTIL] = &free_until,
+        [AST_FOR] = &free_for
     };
 
     (*free_functions[ast->type])(ast);

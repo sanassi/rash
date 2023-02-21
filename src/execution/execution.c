@@ -71,23 +71,28 @@ int fork_and_execute(char **args)
     return true_builtin();
 }
 
-int simple_cmd_execute(struct ast *ast, struct env *env)
+struct vector *expand_all(struct vector *input, struct env *env)
 {
-    struct ast_simple_cmd *simple_cmd = (struct ast_simple_cmd *) ast;
-    struct vector *expanded_args = vector_new();
-    int status = true_builtin();
-
-    for (size_t i = 0; i < simple_cmd->args->size; i++)
+    struct vector *res = vector_new();
+    for (size_t i = 0; i < input->size; i++)
     {
         struct vector *expanded = 
-            expand(vector_get_at(simple_cmd->args, i), env);
+            expand(vector_get_at(input, i), env);
         for (size_t j = 0; j < expanded->size; j++)
         {
             char *str = vector_get_at(expanded, j);
-            vector_append(&expanded_args, str, strlen(str) + 1);
+            vector_append(&res, str, strlen(str) + 1);
         }
         vector_free(expanded);
     }
+    return res;
+}
+
+int simple_cmd_execute(struct ast *ast, struct env *env)
+{
+    struct ast_simple_cmd *simple_cmd = (struct ast_simple_cmd *) ast;
+    struct vector *expanded_args = expand_all(simple_cmd->args, env);
+    int status = true_builtin();
 
     if (simple_cmd->assignments)
     {
@@ -254,6 +259,43 @@ int until_execute(struct ast *ast, struct env *env)
     return status;
 }
 
+int for_execute(struct ast *ast, struct env *env)
+{
+    struct ast_for *for_node = (struct ast_for *) ast;
+    int status = true_builtin();
+
+    struct vector *expanded_words = NULL;
+    struct vector *args = for_node->words;
+
+    if (!args)
+    {
+        for (size_t i = 0; i < env->argc; i++)
+        {
+            char *index_to_str  = my_itoa(i);
+            char *value = env_get_variable(env, index_to_str);
+            vector_append(&expanded_words, value, strlen(value) + 1);
+            free(index_to_str);
+        }
+    }
+    else
+        expanded_words = expand_all(args, env);
+    
+    for (size_t i = 0; i < expanded_words->size; i++)
+    {
+        env_add_variable(env, for_node->loop_word, 
+                vector_get_at(expanded_words, i));
+        
+        status = run_ast(for_node->body, env);
+    }
+
+    for (size_t i = 0; i < expanded_words->size; i++)
+        free(vector_get_at(expanded_words, i));
+
+    vector_free(expanded_words);
+
+    return status;
+}
+
 int run_ast(struct ast *ast, struct env *env)
 {
     if (!ast)
@@ -270,8 +312,15 @@ int run_ast(struct ast *ast, struct env *env)
         [AST_AND_OR] = &and_or_execute,
         [AST_ASSIGN] = &assignment_execute,
         [AST_WHILE] = &while_execute,
-        [AST_UNTIL] = &until_execute
+        [AST_UNTIL] = &until_execute,
+        [AST_FOR] = &for_execute
     };
 
-    return (*run_functions[ast->type])(ast, env);
+    int status = (*run_functions[ast->type])(ast, env);
+
+    char *status_to_str = my_itoa(status);
+    env_add_variable(env, "?", status_to_str);
+    free(status_to_str);
+
+    return status;
 }

@@ -154,6 +154,16 @@ struct ast_until
     struct ast *body;
 };
 
+struct ast_for
+{
+    struct ast base;
+
+    char *loop_word;
+    struct vector *words;
+
+    struct ast *body;
+};
+
 typedef void (*free_type)(struct ast *ast);
 typedef void (*print_type)(struct ast *ast);
 

@@ -143,6 +143,26 @@ static void print_until(struct ast *ast)
     print_ast(until_node->body);
     printf("done\n");
 }
+
+static void print_for(struct ast *ast)
+{
+    struct ast_for *for_node = (struct ast_for *) ast;
+
+    printf("for %s\n", for_node->loop_word);
+    
+    if (for_node->words)
+    {
+        printf("in\n");
+        for (size_t i = 0; i < for_node->words->size; i++)
+            printf("%s ", (char *) vector_get_at(for_node->words, i));
+        printf("\n");
+    }
+
+    printf("do ");
+    print_ast(for_node->body);
+    printf("\ndone\n");
+}
+
 void print_ast(struct ast *ast)
 {
     if (!ast)
@@ -160,7 +180,8 @@ void print_ast(struct ast *ast)
         [AST_AND_OR] = &print_and_or,
         [AST_ASSIGN] = &print_assign,
         [AST_UNTIL] = &print_until,
-        [AST_WHILE] = &print_while
+        [AST_WHILE] = &print_while,
+        [AST_FOR] = &print_for
     };
 
     (*print_functions[ast->type])(ast);

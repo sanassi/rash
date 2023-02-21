@@ -1,11 +1,13 @@
 #include "env.h"
 #include <stdlib.h>
+#include <unistd.h>
+
+#define PATH_MAX 1024
 
 struct env *env_init(void)
 {
     struct env *env = calloc(1, sizeof(struct env));
     env->variables = hash_map_init(100);
-    //env_add_variable(env, "0", "-rash");
     return env;
 }
 
@@ -13,12 +15,25 @@ void env_set_special_variables(struct env *env, int argc, char *argv[])
 {
     if (!env)
         return;
+    
+    env->argc = (size_t) argc;
 
     char *argc_str = my_itoa(argc);
     env_add_variable(env, "#", argc_str);
     free(argc_str);
 
     env_add_variable(env, "?", "0");
+
+    int pid = getgid();
+    char *pid_to_str = my_itoa(pid);
+    env_add_variable(env, "$", pid_to_str);
+    free(pid_to_str);
+
+    char cwd[PATH_MAX];
+    getcwd(cwd, PATH_MAX);
+    env_add_variable(env, "PWD", cwd);
+
+    env_add_variable(env, "IFS", "\n \t");
 
     for (int i = 0; i < argc; i++)
     {

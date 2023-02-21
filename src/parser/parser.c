@@ -113,6 +113,7 @@ AST_ALLOC(and_or, AST_AND_OR)
 AST_ALLOC(assign, AST_ASSIGN)
 AST_ALLOC(while, AST_WHILE)
 AST_ALLOC(until, AST_UNTIL)
+AST_ALLOC(for, AST_FOR)
 
 /*
  * forward declarations
@@ -122,6 +123,58 @@ int parse_compound_list(struct parser *p, struct ast **res);
 int parse_and_or(struct parser *p, struct ast **res);
 int parse_if(struct parser *p, struct ast **res, bool expect_fi);
 int parse_redirection(struct parser *p, struct ast **res);
+
+int parse_for(struct parser *p, struct ast **res)
+{
+    struct ast_for *for_node = ast_for_alloc();
+    *res = &(for_node->base);
+
+    int status = PARSER_OK;
+
+    if (!parser_match(p, 1, FOR))
+        goto error;
+
+    if  (!parser_match(p, 1, WORD))
+        goto error;
+
+    for_node->loop_word = strdup(parser_previous(p)->lexeme);
+    
+    if (parser_check(p, SCOLON))
+        parser_advance(p);
+    else
+    {
+        while (parser_match(p, 1, NEWLINE))
+            continue;
+
+        if (parser_match(p, 1, IN))
+        {
+            while (parser_match(p, 1, WORD))
+            {
+                char *word = strdup(parser_previous(p)->lexeme);
+                vector_append(&(for_node->words), word, strlen(word) + 1);
+            }
+
+            parser_match(p, 2, NEWLINE, SCOLON);
+        }
+    }
+
+    while (parser_match(p, 1, NEWLINE))
+        continue;
+
+    if (!parser_match(p, 1, DO))
+        goto error;
+
+    if ((status = parse_compound_list(p, &for_node->body)) != PARSER_OK)
+        goto error;
+
+    if (!parser_match(p, 1, DONE))
+        goto error;
+
+    return status;
+
+error:
+    return PARSER_ERROR;
+}
 
 int parse_while(struct parser *p, struct ast **res)
 {
@@ -252,6 +305,9 @@ int parse_shell_command(struct parser *p, struct ast **res)
             break;
         case UNTIL:
             status = parse_until(p, res);
+            break;
+        case FOR:
+            status = parse_for(p, res);
             break;
         default:
             status = PARSER_ERROR;
@@ -439,7 +495,7 @@ int parse_command(struct parser *p, struct ast **res)
 
     int status = PARSER_OK;
 
-    if (parser_check_mult(p, 3, IF, WHILE, UNTIL))
+    if (parser_check_mult(p, 4, IF, WHILE, UNTIL, FOR))
     {
         status = parse_shell_command(p, &(ast_cmd->command));
 
@@ -565,7 +621,7 @@ int parse_and_or(struct parser *p, struct ast **res)
     return PARSER_OK;
 
 error:
-    fprintf(stderr, "error: parse and or");
+    fprintf(stderr, "error: parse and or\n");
     free_ast(*res);
     *res = NULL;
     return status;
