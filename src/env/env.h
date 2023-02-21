@@ -14,6 +14,10 @@ struct env
 
     int exit_value;
     int last_cmd_value;
+
+    size_t nb_nested_loops;
+    size_t nb_continue;
+    size_t nb_break;
 };
 
 struct env *env_init(void);

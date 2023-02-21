@@ -9,7 +9,8 @@
 #include "pipeline.h"
 
 static const char *builtins_str[] = {
-    "true", "false", "echo", "exit", "cd", NULL
+    "true", "false", "echo", "exit", "cd", 
+    "continue", "break", NULL
 };
 
 bool is_builtin(char *str)
@@ -22,12 +23,18 @@ bool is_builtin(char *str)
     return false;
 }
 
+/**
+ * Store builtin name and execution function in a struct,
+ * to simplify the builtin execution.
+ * TODO : add environment to builtin run arguments.
+ */
 struct builtin
 {
     char *name;
     builtin_run exec_func;
 };
 
+// TODO: break, continue and exit: check if arg is a number
 int builin_execute(char *builtin_name, struct vector *args, struct env *env)
 {
     if (str_equ(builtin_name, "true") || str_equ(builtin_name, "false"))
@@ -40,12 +47,27 @@ int builin_execute(char *builtin_name, struct vector *args, struct env *env)
         if (args->size == 1)
             env->exit_value = env->last_cmd_value;
         else
-        {
             env->exit_value = atoi((char *) vector_get_at(args, 1));
-        }
         return EXIT_CODE;
     }
 
+    if (str_equ(builtin_name, "break") && env->nb_nested_loops != 0)
+    {
+        if (args->size == 1)
+            env->nb_break += 1;
+        else
+            env->nb_break = atoi((char *) vector_get_at(args, 1));
+        return status;
+    }
+
+    if (str_equ(builtin_name, "continue") && env->nb_nested_loops != 0)
+    {
+        if (args->size == 1)
+            env->nb_continue += 1;
+        else
+            env->nb_continue = atoi((char *) vector_get_at(args, 1));
+        return status;
+    }
     static struct builtin builtins[] =
     {
         {"echo", &echo},
@@ -158,7 +180,13 @@ int cmd_list_execute(struct ast *ast, struct env *env)
     for (size_t i = 0; i < list->commands->size; i++)
     {
         status = run_ast(vector_get_at(list->commands, i), env);
+
         if (status == EXIT_CODE)
+            break;
+
+        if (env->nb_continue != 0)
+            break;
+        if (env->nb_break != 0)
             break;
     }
 
@@ -254,38 +282,72 @@ int assignment_execute(struct ast *ast, struct env *env)
 
 int while_execute(struct ast *ast, struct env *env)
 {
+    env->nb_nested_loops += 1;
+
     struct ast_while *while_node = (struct ast_while *) ast;
 
     int status = true_builtin();
     while (run_ast(while_node->condition, env) == true_builtin())
     {
+        if (env->nb_continue != 0)
+        {
+            env->nb_continue -= 1;
+            continue;
+        }
+
         status = run_ast(while_node->body, env);
 
         if (status == EXIT_CODE)
             break;
+
+        if (env->nb_break != 0)
+        {
+            env->nb_break -= 1;
+            break;
+        }
     }
+
+    env->nb_nested_loops -= 1;
 
     return status;
 }
 
 int until_execute(struct ast *ast, struct env *env)
 {
+    env->nb_nested_loops += 1;
+
     struct ast_until *until_node = (struct ast_until *) ast;
 
     int status = true_builtin();
     while (run_ast(until_node->condition, env) == false_builtin())
     {
+        if (env->nb_continue != 0)
+        {
+            env->nb_continue -= 1;
+            continue;;
+        }
+
         status = run_ast(until_node->body, env);
 
         if (status == EXIT_CODE)
             break;
+
+        if (env->nb_break != 0)
+        {
+            env->nb_break -= 1;
+            break;
+        }
     }
+
+    env->nb_nested_loops -= 1;
 
     return status;
 }
 
 int for_execute(struct ast *ast, struct env *env)
 {
+    env->nb_nested_loops += 1;
+
     struct ast_for *for_node = (struct ast_for *) ast;
     int status = true_builtin();
 
@@ -307,6 +369,12 @@ int for_execute(struct ast *ast, struct env *env)
     
     for (size_t i = 0; i < expanded_words->size; i++)
     {
+        if (env->nb_continue != 0)
+        {
+            env->nb_continue -= 1;
+            continue;
+        }
+
         env_add_variable(env, for_node->loop_word, 
                 vector_get_at(expanded_words, i));
         
@@ -314,12 +382,20 @@ int for_execute(struct ast *ast, struct env *env)
 
         if (status == EXIT_CODE)
             break;
+
+        if (env->nb_break != 0)
+        {
+            env->nb_break -= 1;
+            break;
+        }
     }
 
     for (size_t i = 0; i < expanded_words->size; i++)
         free(vector_get_at(expanded_words, i));
 
     vector_free(expanded_words);
+
+    env->nb_nested_loops -= 1;
 
     return status;
 }
@@ -347,7 +423,6 @@ int run_ast(struct ast *ast, struct env *env)
     int status = (*run_functions[ast->type])(ast, env);
 
     env->last_cmd_value = status;
-    //env->exit_value = status;
 
     char *status_to_str = my_itoa(status);
     env_add_variable(env, "?", status_to_str);
