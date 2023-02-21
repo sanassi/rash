@@ -1,0 +1,13 @@
+for i in 1 2 3 4 5; do
+    if true; then
+        for j in  4 5 6 7 8; do
+            echo $j
+            echo $i
+        done
+
+        echo $i
+        echo $j
+    fi
+
+    echo $i > file.txt
+done
