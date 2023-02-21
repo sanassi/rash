@@ -8,7 +8,9 @@ execution_src = files([
   'redir.c',
   'redir.h',
   'pipeline.h',
-  'pipeline.c'
+  'pipeline.c',
+  'builtins/cd.h',
+  'builtins/cd.c'
 ])
 
 execution_inc = include_directories('.')

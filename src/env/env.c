@@ -1,9 +1,13 @@
 #include "env.h"
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #define PATH_MAX 1024
 
+/**
+ * Initialize an empty environment
+ */
 struct env *env_init(void)
 {
     struct env *env = calloc(1, sizeof(struct env));
@@ -11,6 +15,10 @@ struct env *env_init(void)
     return env;
 }
 
+/**
+ * Set the environement special variables from
+ * the program arguments.
+ */
 void env_set_special_variables(struct env *env, int argc, char *argv[])
 {
     if (!env)
@@ -18,7 +26,13 @@ void env_set_special_variables(struct env *env, int argc, char *argv[])
     
     env->argc = (size_t) argc;
 
-    char *argc_str = my_itoa(argc);
+    // $0 is not included in $#
+    char *argc_str;
+    if (argc == 0)
+        argc_str = my_itoa(0);
+    else
+        argc_str = my_itoa(argc - 1);
+
     env_add_variable(env, "#", argc_str);
     free(argc_str);
 
@@ -29,9 +43,11 @@ void env_set_special_variables(struct env *env, int argc, char *argv[])
     env_add_variable(env, "$", pid_to_str);
     free(pid_to_str);
 
+    /*
     char cwd[PATH_MAX];
     getcwd(cwd, PATH_MAX);
     env_add_variable(env, "PWD", cwd);
+    */
 
     env_add_variable(env, "IFS", "\n \t");
 
@@ -61,5 +77,10 @@ void env_add_variable(struct env *env, const char *id, char *value)
 
 char *env_get_variable(struct env *env, const char *id)
 {
+    if (strcmp("PWD", id) == 0)
+        return strdup(getenv("PWD"));
+    if (strcmp("OLDPWD", id) == 0)
+        return strdup(getenv("OLDPWD"));
+
     return hash_map_get(env->variables, id);
 }

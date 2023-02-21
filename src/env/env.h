@@ -11,6 +11,9 @@ struct env
 {
     size_t argc;
     struct hash_map *variables;
+
+    int exit_value;
+    int last_cmd_value;
 };
 
 struct env *env_init(void);

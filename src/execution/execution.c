@@ -1,13 +1,15 @@
 #include "execution.h"
 #include "builtins/bool.h"
+#include "builtins/cd.h"
 #include "redir.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include "pipeline.h"
 
 static const char *builtins_str[] = {
-    "true", "false", "echo", NULL
+    "true", "false", "echo", "exit", "cd", NULL
 };
 
 bool is_builtin(char *str)
@@ -26,18 +28,31 @@ struct builtin
     builtin_run exec_func;
 };
 
-int builin_execute(char *builtin_name, struct vector *args)
+int builin_execute(char *builtin_name, struct vector *args, struct env *env)
 {
     if (str_equ(builtin_name, "true") || str_equ(builtin_name, "false"))
         return strcmp(builtin_name, "true") == 0 ? true_builtin() : false_builtin();
 
+    int status = true_builtin();
+
+    if (str_equ(builtin_name, "exit"))
+    {
+        if (args->size == 1)
+            env->exit_value = env->last_cmd_value;
+        else
+        {
+            env->exit_value = atoi((char *) vector_get_at(args, 1));
+        }
+        return EXIT_CODE;
+    }
+
     static struct builtin builtins[] =
     {
-        {"echo", &echo}
+        {"echo", &echo},
+        {"cd", &cd}
     };
 
     size_t nb_builtins = sizeof(builtins) / sizeof(struct builtin);
-    int status = true_builtin();
 
     for (size_t i = 0; i < nb_builtins; i++)
     {
@@ -115,7 +130,7 @@ int simple_cmd_execute(struct ast *ast, struct env *env)
         char *cmd_name = vector_get_at(expanded_args, 0);
 
         if (is_builtin(cmd_name))
-            status = builin_execute(cmd_name, expanded_args);
+            status = builin_execute(cmd_name, expanded_args, env);
         else
         {
             char **args = vector_convert_str_arr(expanded_args, true);
@@ -141,7 +156,11 @@ int cmd_list_execute(struct ast *ast, struct env *env)
     struct ast_cmd_list *list = (struct ast_cmd_list *) ast;
     int status = true_builtin();
     for (size_t i = 0; i < list->commands->size; i++)
+    {
         status = run_ast(vector_get_at(list->commands, i), env);
+        if (status == EXIT_CODE)
+            break;
+    }
 
     return status;
 }
@@ -241,6 +260,9 @@ int while_execute(struct ast *ast, struct env *env)
     while (run_ast(while_node->condition, env) == true_builtin())
     {
         status = run_ast(while_node->body, env);
+
+        if (status == EXIT_CODE)
+            break;
     }
 
     return status;
@@ -254,6 +276,9 @@ int until_execute(struct ast *ast, struct env *env)
     while (run_ast(until_node->condition, env) == false_builtin())
     {
         status = run_ast(until_node->body, env);
+
+        if (status == EXIT_CODE)
+            break;
     }
 
     return status;
@@ -286,6 +311,9 @@ int for_execute(struct ast *ast, struct env *env)
                 vector_get_at(expanded_words, i));
         
         status = run_ast(for_node->body, env);
+
+        if (status == EXIT_CODE)
+            break;
     }
 
     for (size_t i = 0; i < expanded_words->size; i++)
@@ -317,6 +345,9 @@ int run_ast(struct ast *ast, struct env *env)
     };
 
     int status = (*run_functions[ast->type])(ast, env);
+
+    env->last_cmd_value = status;
+    //env->exit_value = status;
 
     char *status_to_str = my_itoa(status);
     env_add_variable(env, "?", status_to_str);

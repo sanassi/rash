@@ -164,7 +164,7 @@ int main(int argc, char *argv[])
 
         fflush(stream->fp);
 
-        bool done = p->is_at_end;
+        bool done = p->is_at_end || run_status == EXIT_CODE;
 
         free_ast(root);
         parser_free(p);
@@ -176,10 +176,14 @@ int main(int argc, char *argv[])
     for (size_t i = 0; i < l->tokens->size; i++)
         token_free(l->tokens->nodes[i]->data);
 
+    int env_exit_value = run_status 
+        == EXIT_CODE ? env->exit_value : env->last_cmd_value;
+
     env_free(env);
     vector_free(l->tokens);
     lexer_free(l);
     stream_free(stream);
     args_free(args);
-    return run_status;
+
+    return parse_status == PARSER_ERROR ? parse_status : env_exit_value; 
 }

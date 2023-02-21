@@ -98,6 +98,13 @@ void expand_aux(struct expander *exp, struct env *env)
                 to_replace = my_str_cat(to_replace, &cur, 1);
                 stream_advance(exp->stream);
             }
+            if (to_replace == NULL) /* nothing after $*/
+            {
+                *exp->current_str = my_str_cat(*exp->current_str, &c, 1);
+                expand_aux(exp, env);
+                return;
+            }
+
 
             char *value = env_get_variable(env, to_replace);
             if (value)
@@ -122,6 +129,9 @@ void expand_aux(struct expander *exp, struct env *env)
 struct vector *expand(char *str, struct env *env)
 {
     struct vector *res = vector_new();
+    if (!str)
+        return res;
+
     struct stream *stream = stream_open_string(str);
     struct expander *exp = expander_init();
 
