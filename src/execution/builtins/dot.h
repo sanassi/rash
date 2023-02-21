@@ -1,5 +1,5 @@
-#ifndef CD_H
-#define CD_H
+#ifndef DOT_H
+#define DOT_H
 
 #include <err.h>
 #include <stdbool.h>
@@ -14,8 +14,6 @@
 #include "../../utils/utils.h"
 #include "../../env/env.h"
 
-#define CD_ERROR_EXIT -1
+int dot(struct vector *args, struct env *env);
 
-int cd(struct vector *args, struct env *env);
-
-#endif /* ! CD_H */
+#endif /* ! DOT_H */

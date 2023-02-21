@@ -9,8 +9,9 @@
 
 #define PATH_MAX 4096
 
-int cd(struct vector *args)
+int cd(struct vector *args, struct env *env)
 {
+    (void) env; /* need to find a way to remove this.. */
     char buffer[PATH_MAX];
     char *cwd = getcwd(buffer, PATH_MAX);
     if (!cwd)

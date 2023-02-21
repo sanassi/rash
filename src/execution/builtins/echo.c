@@ -41,8 +41,9 @@ void print(char *str, bool interpret)
     }
 }
 
-int echo(struct vector *args)
+int echo(struct vector *args, struct env *env)
 {
+    (void) env; /* needs to be removed */
     char **args_str = vector_convert_str_arr(args, false);
 
     int c;

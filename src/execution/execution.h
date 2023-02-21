@@ -20,7 +20,7 @@
 #define EXIT_CODE 666
 
 typedef int (*run_type)(struct ast *ast, struct env *env);
-typedef int (*builtin_run)(struct vector *args);
+typedef int (*builtin_run)(struct vector *args, struct env *env);
 int run_ast(struct ast *ast, struct env *env);
 
 #endif /* ! EXECUTION_H */

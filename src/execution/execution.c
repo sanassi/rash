@@ -1,6 +1,7 @@
 #include "execution.h"
 #include "builtins/bool.h"
 #include "builtins/cd.h"
+#include "builtins/dot.h"
 #include "redir.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,7 +11,7 @@
 
 static const char *builtins_str[] = {
     "true", "false", "echo", "exit", "cd", 
-    "continue", "break", NULL
+    "continue", "break", ".", NULL
 };
 
 bool is_builtin(char *str)
@@ -71,7 +72,8 @@ int builin_execute(char *builtin_name, struct vector *args, struct env *env)
     static struct builtin builtins[] =
     {
         {"echo", &echo},
-        {"cd", &cd}
+        {"cd", &cd},
+        {".", &dot}
     };
 
     size_t nb_builtins = sizeof(builtins) / sizeof(struct builtin);
@@ -80,7 +82,7 @@ int builin_execute(char *builtin_name, struct vector *args, struct env *env)
     {
         if (!strcmp(builtins[i].name, builtin_name))
         {
-            status = builtins[i].exec_func(args);
+            status = builtins[i].exec_func(args, env);
             break;
         }
     }

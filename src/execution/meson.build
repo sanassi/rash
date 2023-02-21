@@ -10,7 +10,9 @@ execution_src = files([
   'pipeline.h',
   'pipeline.c',
   'builtins/cd.h',
-  'builtins/cd.c'
+  'builtins/cd.c',
+  'builtins/dot.c',
+  'builtins/dot.h'
 ])
 
 execution_inc = include_directories('.')

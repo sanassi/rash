@@ -7,6 +7,8 @@
 #include "bool.h"
 #include <unistd.h>
 
-int echo(struct vector *args);
+#include "../../env/env.h"
+
+int echo(struct vector *args, struct env *env);
 
 #endif /* ! ECHO_H */
