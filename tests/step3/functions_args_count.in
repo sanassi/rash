@@ -1,0 +1,12 @@
+fun() { echo $#; echo $1 };
+
+fun 12 34 45 56 78 89
+fun 12 
+
+fun 23 45 67 89
+
+fun heh he e
+
+fun 50
+
+fun fun

@@ -1,0 +1,10 @@
+bar() {
+    echo toto;
+}
+
+foo() {
+    bar
+}
+
+
+foo

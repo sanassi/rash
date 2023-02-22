@@ -1,0 +1,8 @@
+foo() {
+    if true; then
+        echo hehehe $# $1;
+    fi
+}
+
+
+foo toto 

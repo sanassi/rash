@@ -1,0 +1,7 @@
+fun() {
+    while true;
+    do
+        echo toto; echo hehe;
+        break;
+    done
+}

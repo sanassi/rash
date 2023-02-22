@@ -1,0 +1,3 @@
+foo() { echo this is inside a command block; }
+
+foo
