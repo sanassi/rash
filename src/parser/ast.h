@@ -164,6 +164,18 @@ struct ast_for
     struct ast *body;
 };
 
+struct ast_func
+{
+    struct ast base;
+
+    char *name;
+    struct ast *body;
+
+    size_t nb_references; /* "reference counting" (just mark once)*/
+
+    struct vector *args;
+};
+
 typedef void (*free_type)(struct ast *ast);
 typedef void (*print_type)(struct ast *ast);
 

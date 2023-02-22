@@ -166,6 +166,19 @@ static void free_for(struct ast *ast)
     free(for_node);
 }
 
+static void free_func(struct ast *ast)
+{
+    struct ast_func *func = (struct ast_func *) ast;
+    if (func->nb_references != 0)
+        return;
+
+    free(func->name);
+
+    free_ast(func->body);
+
+    free(func);
+}
+
 void free_ast(struct ast *ast)
 {
     if (!ast)
@@ -185,7 +198,8 @@ void free_ast(struct ast *ast)
         [AST_ASSIGN] = &free_assign,
         [AST_WHILE] = &free_while,
         [AST_UNTIL] = &free_until,
-        [AST_FOR] = &free_for
+        [AST_FOR] = &free_for,
+        [AST_FUNC] = &free_func
     };
 
     (*free_functions[ast->type])(ast);

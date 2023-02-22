@@ -163,6 +163,15 @@ static void print_for(struct ast *ast)
     printf("\ndone\n");
 }
 
+static void print_func(struct ast *ast)
+{
+    struct ast_func *func = (struct ast_func *) ast;
+
+    printf("%s()\n{\n", func->name);
+    print_ast(func->body);
+    printf("\n}");
+}
+
 void print_ast(struct ast *ast)
 {
     if (!ast)
@@ -181,7 +190,8 @@ void print_ast(struct ast *ast)
         [AST_ASSIGN] = &print_assign,
         [AST_UNTIL] = &print_until,
         [AST_WHILE] = &print_while,
-        [AST_FOR] = &print_for
+        [AST_FOR] = &print_for,
+        [AST_FUNC] = &print_func
     };
 
     (*print_functions[ast->type])(ast);

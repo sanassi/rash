@@ -3,6 +3,9 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "../parser/ast.h"
+#include "../parser/ast_free.h"
+
 #define PATH_MAX 1024
 
 /**
@@ -63,24 +66,103 @@ void env_free(struct env *env)
 {
     if (!env)
         return;
+
+    if (env->functions)
+    {
+        for (size_t i = 0; i < env->functions->size; i++)
+        {
+            struct ast_func *func = vector_get_at(env->functions, i);
+            func->nb_references = 0;
+            free_ast((struct ast*) func);
+        }
+        vector_free(env->functions);
+    }
+
     hash_map_free(env->variables);
     free(env);
 }
+
+/**
+ * Add a variable to the current environment.
+ * If the environment has a parent, and is not isolated,
+ * add the variable to the parent.
+ * Otherwise, add the variable to the current environment.
+ */
 
 void env_add_variable(struct env *env, const char *id, char *value)
 {
     if (!env)
         return;
-    bool updated = true;
-    hash_map_insert(env->variables, id, value, &updated);
+
+    if (env->isolated)
+    {
+        bool updated = true;
+        hash_map_insert(env->variables, id, value, &updated);
+        return;
+    }
+
+    /* fond the global env (can even fuse the 2 conditions) */
+    if (!env->enclosing)     
+    {
+        bool updated = true;
+        hash_map_insert(env->variables, id, value, &updated);
+        return;
+    }
+    else
+        env_add_variable(env->enclosing, id, value);
 }
+
+/**
+ * Returns the value of a variable given its id.
+ * If the environment does not have a parent environment,
+ * return the variable from its hash_map of variables.
+ * Otherwise, check if the variable exists in the current environment,
+ * if not, check if it exists in its parent.
+ */
 
 char *env_get_variable(struct env *env, const char *id)
 {
-    if (strcmp("PWD", id) == 0)
-        return strdup(getenv("PWD"));
-    if (strcmp("OLDPWD", id) == 0)
-        return strdup(getenv("OLDPWD"));
+    if (!env->enclosing)
+    {
+        if (strcmp("PWD", id) == 0)
+            return strdup(getenv("PWD"));
+        if (strcmp("OLDPWD", id) == 0)
+            return strdup(getenv("OLDPWD"));
 
-    return hash_map_get(env->variables, id);
+        return hash_map_get(env->variables, id);
+    }
+    else
+    {
+        char *test = hash_map_get(env->variables, id);
+        if (test)
+            return test;
+
+        return env_get_variable(env->enclosing, id);
+    }
+}
+
+struct ast_func *env_get_function(struct env *env, char *name)
+{
+    if (!env->enclosing)
+    {
+        if (!env->functions)
+            return NULL;
+        for (size_t i = 0; i < env->functions->size; i++)
+        {
+            struct ast_func *func = vector_get_at(env->functions, i);
+            if (strcmp(func->name, name) == 0)
+                return func;
+        }
+        return NULL;
+    }
+    else
+        return env_get_function(env->enclosing, name);
+}
+
+bool env_add_function(struct env *env, struct ast_func *func)
+{
+    if (!env->enclosing || env->isolated)
+        return vector_append(&env->functions, func, sizeof(struct ast_func *));
+    else
+        return env_add_function(env->enclosing, func);
 }

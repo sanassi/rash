@@ -24,6 +24,23 @@ bool is_builtin(char *str)
     return false;
 }
 
+/*
+struct ast_func *get_function(char *name, struct env *env)
+{
+    if (!env->functions)
+        return NULL;
+
+    for (size_t i = 0; i < env->functions->size; i++)
+    {
+        struct ast_func *func = vector_get_at(env->functions, i);
+        if (strcmp(func->name, name) == 0)
+            return func;
+    }
+
+    return NULL;
+}
+*/
+
 /**
  * Store builtin name and execution function in a struct,
  * to simplify the builtin execution.
@@ -69,6 +86,7 @@ int builin_execute(char *builtin_name, struct vector *args, struct env *env)
             env->nb_continue = atoi((char *) vector_get_at(args, 1));
         return status;
     }
+
     static struct builtin builtins[] =
     {
         {"echo", &echo},
@@ -151,10 +169,35 @@ int simple_cmd_execute(struct ast *ast, struct env *env)
 
     if (expanded_args->size != 0)
     {
+        struct ast_func *func = NULL;
         char *cmd_name = vector_get_at(expanded_args, 0);
 
         if (is_builtin(cmd_name))
             status = builin_execute(cmd_name, expanded_args, env);
+        else if ((func = env_get_function(env, cmd_name)) != NULL)
+        {
+            struct env *func_env = env_init();
+
+            /* create a new environement from the global one */
+            char **args = vector_convert_str_arr(expanded_args, true);
+            env_set_special_variables(func_env, 
+                    expanded_args->size, args);
+
+            func_env->enclosing = env;
+            func_env->isolated = false;
+
+            /*
+             * get and call function ast, and execute it with func_env as arg
+             */
+
+            run_ast(func->body, func_env);
+
+            env_free(func_env);
+
+            for (size_t i = 0; args[i]; i++)
+                free(args[i]);
+            free(args);
+        }
         else
         {
             char **args = vector_convert_str_arr(expanded_args, true);
@@ -326,7 +369,7 @@ int until_execute(struct ast *ast, struct env *env)
         if (env->nb_continue != 0)
         {
             env->nb_continue -= 1;
-            continue;;
+            continue;
         }
 
         status = run_ast(until_node->body, env);
@@ -402,6 +445,21 @@ int for_execute(struct ast *ast, struct env *env)
     return status;
 }
 
+int func_execute(struct ast *ast, struct env *env)
+{
+    struct ast_func *func = (struct ast_func *) ast;
+
+    
+    /*
+     * TODO : void hashmap to store functions, and update their value.
+     * a vector is not the way to go, but it'll do fine for now.
+     */
+    func->nb_references = 1;
+    env_add_function(env, func);
+
+    return true_builtin();
+}
+
 int run_ast(struct ast *ast, struct env *env)
 {
     if (!ast)
@@ -419,7 +477,8 @@ int run_ast(struct ast *ast, struct env *env)
         [AST_ASSIGN] = &assignment_execute,
         [AST_WHILE] = &while_execute,
         [AST_UNTIL] = &until_execute,
-        [AST_FOR] = &for_execute
+        [AST_FOR] = &for_execute,
+        [AST_FUNC] = &func_execute
     };
 
     int status = (*run_functions[ast->type])(ast, env);

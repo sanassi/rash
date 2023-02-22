@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/select.h>
 #include <time.h>
 
 struct parser *parser_init(void)
@@ -114,6 +115,7 @@ AST_ALLOC(assign, AST_ASSIGN)
 AST_ALLOC(while, AST_WHILE)
 AST_ALLOC(until, AST_UNTIL)
 AST_ALLOC(for, AST_FOR)
+AST_ALLOC(func, AST_FUNC)
 
 /*
  * forward declarations
@@ -328,7 +330,7 @@ int parse_shell_command(struct parser *p, struct ast **res)
     return status;
 
 error:
-    fprintf(stderr, "error: parse shell command");
+    fprintf(stderr, "error: parse shell command\n");
     free_ast(*res);
     *res = NULL;
     return PARSER_ERROR;
@@ -427,7 +429,8 @@ error:
     return PARSER_ERROR;
 }
 
-int parse_simple_command(struct parser *p, struct ast **res)
+int parse_simple_command(struct parser *p, 
+        struct ast **res, bool word_was_eaten)
 {
     struct ast_simple_cmd *simple_cmd = ast_simple_cmd_alloc();
     simple_cmd->args = vector_new();
@@ -435,6 +438,9 @@ int parse_simple_command(struct parser *p, struct ast **res)
     struct ast *tmp = NULL;
 
     bool has_prefix = false;
+    struct token *previous = NULL;
+    if (word_was_eaten)    
+        previous = parser_previous(p);
 
     while (parser_check_mult(p, 9, ASSIGNMENT_WORD, IONUMBER, GREAT, 
                 LESS, DGREAT, GREATAND, 
@@ -455,18 +461,31 @@ int parse_simple_command(struct parser *p, struct ast **res)
         }
     }
 
-    if (has_prefix && !parser_check(p, WORD))
+    if (has_prefix /*&& !parser_check(p, WORD)*/ && !word_was_eaten &&
+            parser_check_mult(p, 6, SCOLON, AND_IF, OR_IF, PIPE, NEWLINE, END))
         return PARSER_OK;
+
+    char *word = NULL;
+    if (word_was_eaten)
+        word = previous->lexeme;
+    else
+    {
+        if (!parser_match(p, 1, WORD))
+            goto error;
+        word = parser_previous(p)->lexeme;
+    }
     /*
     if (!parser_match(p, 1, WORD))
         return PARSER_OK;
     */
 
+    /*
     if (!parser_match(p, 1, WORD))
         goto error;
+    */
 
-    char *cmd_name = parser_previous(p) -> lexeme;
-    vector_append(&simple_cmd->args, strdup(cmd_name), strlen(cmd_name));
+    //char *cmd_name = parser_previous(p) -> lexeme;
+    vector_append(&simple_cmd->args, strdup(word), strlen(word));
 
     while (parser_check_mult(p, 9, IONUMBER, WORD, GREAT, LESS, DGREAT, GREATAND, 
                 LESSAND, CLOBBER, LESSGREAT))
@@ -490,6 +509,36 @@ int parse_simple_command(struct parser *p, struct ast **res)
 
 error:
     fprintf(stderr, "error : parse_simple_command\n");
+    free_ast(*res);
+    *res = NULL;
+    return PARSER_ERROR;
+}
+
+int parse_funcdec(struct parser *p, struct ast **res)
+{
+    struct ast_func *func = ast_func_alloc();
+    *res = &(func->base);
+    
+    // word (function name) was eaten in parse_command
+    func->name = strdup(parser_previous(p)->lexeme);
+    
+    if (!parser_match(p, 1, LPAR))
+        goto error;
+    if (!parser_match(p, 1, RPAR))
+        goto error;
+
+    while (parser_match(p, 1, NEWLINE))
+        continue;
+
+    int status = PARSER_OK;
+
+    if ((status = parse_shell_command(p, &(func->body))) != PARSER_OK)
+        goto error;
+
+    return status;
+
+error:
+    fprintf(stderr, "error: parse funcdec\n");
     free_ast(*res);
     *res = NULL;
     return PARSER_ERROR;
@@ -519,7 +568,13 @@ int parse_command(struct parser *p, struct ast **res)
     }
     else
     {
-        status = parse_simple_command(p, &(ast_cmd->command));
+        bool word_was_eaten = parser_match(p, 1, WORD);
+
+        if (parser_check(p, LPAR))
+            status = parse_funcdec(p, &(ast_cmd->command));
+        else
+            status = parse_simple_command(p, &(ast_cmd->command), 
+                    word_was_eaten);
     }
 
     if (status != PARSER_OK)
