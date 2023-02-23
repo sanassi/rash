@@ -258,6 +258,9 @@ void lexer_advance(struct lexer *l)
         *l->cur_token = my_str_cat(*l->cur_token, &cur, 1);
         l->quoting = false;
     }
+    /*
+     * here add candidates for expansion
+     */
     else if (!l->quoting && char_can_start_operator(c))
     {
         l->prev_char_in_word = false;

@@ -172,6 +172,14 @@ static void print_func(struct ast *ast)
     printf("\n}");
 }
 
+static void print_subshell(struct ast *ast)
+{
+    struct ast_subshell *subshell = (struct ast_subshell *) ast;
+    printf("( ");
+    print_ast(subshell->compound_list);
+    printf(" )");
+}
+
 void print_ast(struct ast *ast)
 {
     if (!ast)
@@ -191,7 +199,8 @@ void print_ast(struct ast *ast)
         [AST_UNTIL] = &print_until,
         [AST_WHILE] = &print_while,
         [AST_FOR] = &print_for,
-        [AST_FUNC] = &print_func
+        [AST_FUNC] = &print_func,
+        [AST_SUBSHELL] = &print_subshell
     };
 
     (*print_functions[ast->type])(ast);

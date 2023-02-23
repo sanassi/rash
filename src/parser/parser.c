@@ -37,6 +37,9 @@ static struct token *parser_advance(struct parser *p)
     if (res -> type == END)
         p->is_at_end = true;
 
+    if (p->debug)
+        token_print(res);
+
     return res;
 }
 
@@ -116,6 +119,7 @@ AST_ALLOC(while, AST_WHILE)
 AST_ALLOC(until, AST_UNTIL)
 AST_ALLOC(for, AST_FOR)
 AST_ALLOC(func, AST_FUNC)
+AST_ALLOC(subshell, AST_SUBSHELL)
 
 /*
  * forward declarations
@@ -293,6 +297,25 @@ error:
     return PARSER_ERROR;
 }
 
+int parse_subshell(struct parser *p, struct ast **res)
+{
+    struct ast_subshell *subshell = ast_subshell_alloc();
+    *res = &(subshell->base);
+
+    int status = PARSER_OK;
+    if ((status = parse_compound_list(p, &(subshell->compound_list))) 
+            != PARSER_OK)
+        goto error;
+
+    return status;
+
+error:
+    fprintf(stderr, "error: parse subshell");
+    free_ast(*res);
+    *res = NULL;
+    return PARSER_ERROR;
+}
+
 int parse_shell_command(struct parser *p, struct ast **res)
 {
     int status = PARSER_OK;
@@ -317,6 +340,17 @@ int parse_shell_command(struct parser *p, struct ast **res)
         if (status != PARSER_OK)
             goto error;
         if (!parser_match(p, 1, RBRACE))
+            status = PARSER_ERROR;
+        break;
+    case LPAR:
+        parser_match(p, 1, LPAR);
+        status = parse_subshell(p, res);
+        /*
+        if (status != PARSER_OK)
+            break;
+        */
+
+        if (!parser_match(p, 1, RPAR))
             status = PARSER_ERROR;
         break;
     default:
@@ -462,7 +496,8 @@ int parse_simple_command(struct parser *p,
     }
 
     if (has_prefix /*&& !parser_check(p, WORD)*/ && !word_was_eaten &&
-            parser_check_mult(p, 6, SCOLON, AND_IF, OR_IF, PIPE, NEWLINE, END))
+            parser_check_mult(p, 6, SCOLON, AND_IF, 
+                OR_IF, PIPE, NEWLINE, END))
         return PARSER_OK;
 
     char *word = NULL;
@@ -552,7 +587,7 @@ int parse_command(struct parser *p, struct ast **res)
 
     int status = PARSER_OK;
 
-    if (parser_check_mult(p, 5, IF, WHILE, UNTIL, FOR, LBRACE))
+    if (parser_check_mult(p, 6, IF, WHILE, UNTIL, FOR, LBRACE, LPAR))
     {
         status = parse_shell_command(p, &(ast_cmd->command));
 
@@ -712,7 +747,8 @@ int parse_compound_list(struct parser *p, struct ast **res)
         while (parser_match(p, 1, NEWLINE))
             continue;
 
-        if (parser_check_mult(p, 7, THEN, FI, ELIF, ELSE, DO, DONE, RBRACE))
+        if (parser_check_mult(p, 8, THEN, FI, ELIF, ELSE, 
+                    DO, DONE, RBRACE, RPAR))
             break;
 
         if ((status = parse_and_or(p, &tmp)) != PARSER_OK)
@@ -771,6 +807,7 @@ int parse_input(struct parser *p, struct ast **res)
     int status = PARSER_OK;
     if ((status = parse_list(p, res)) != PARSER_OK)
         return status;
+
     if (!parser_match(p, 2, NEWLINE, END))
         return PARSER_ERROR;
     return status;

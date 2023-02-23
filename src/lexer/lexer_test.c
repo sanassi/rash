@@ -7,7 +7,7 @@ int main(int argc, char *argv[])
     (void) argc;
     (void) argv;
     struct lexer *l = lexer_init();
-    l->stream = stream_open_string(argv[1]);
+    l->stream = stream_open_file(argv[1]);
 
     while (true)
     {

@@ -20,6 +20,8 @@ struct parser
 {
     struct lexer *lexer;
     bool is_at_end;
+
+    bool debug;
 };
 
 enum grammar_rule

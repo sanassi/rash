@@ -21,7 +21,7 @@ struct program_args *parse_cmd_line_args(int argc, char *argv[])
        };
 
        int option_index = 0;
-       int c = getopt_long(argc, argv, "pc:", long_option, &option_index);
+       int c = getopt_long(argc, argv, "pdc:", long_option, &option_index);
        if (c == -1)
            break;
 
@@ -30,9 +30,13 @@ struct program_args *parse_cmd_line_args(int argc, char *argv[])
         case 'p':
             p_args->pretty = true;
             break;
+        case 'd':
+            p_args->debug = true;
+            break;
         case 'c':
             p_args->string = true;
             p_args->str_input = strdup(optarg);
+            break;
         case '?':
             break;
         default:

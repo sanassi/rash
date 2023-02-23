@@ -11,6 +11,16 @@ struct stream *stream_open(struct program_args *args)
     errx(2, "invalid stream options");
 }
 
+/**
+ * Performs the Read-Eval-Print-Loop (REPL).
+ * Given the program arguments and an execution environment,
+ * open a stream, create a lexer, and while the stream is not
+ * at the end of the input, parse the input, create and execute
+ * the result AST.
+ *
+ * @param args Program arguments, eg. stream type, execution flags.
+ * @param env Execution environment.
+ */
 int rash_repl(struct program_args *args, struct env *env)
 {
     struct stream *stream = stream_open(args);
@@ -23,24 +33,26 @@ int rash_repl(struct program_args *args, struct env *env)
     while (true)
     {
         struct parser *p = parser_init();
+        p->debug = args->debug;
         p->lexer = l;
         struct ast *root = NULL;
 
         parse_status = parse_input(p, &root);
 
-        if (parse_status == PARSER_ERROR && !args->input)
+        if ((parse_status == PARSER_ERROR) && !args->input)
             errx(parse_status, "grammar error");
 
         if (args->pretty)
             print_ast(root);
 
         if (root)
+        {
             run_status = run_ast(root, env);
+            fflush(stream->fp);
+        }
 
         if (run_status == BUILTIN_ERR && !args->input)
             errx(run_status, "execution error");
-
-        fflush(stream->fp);
 
         bool done = p->is_at_end || run_status == EXIT_CODE;
 

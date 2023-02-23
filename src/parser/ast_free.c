@@ -179,6 +179,14 @@ static void free_func(struct ast *ast)
     free(func);
 }
 
+static void free_subshell(struct ast *ast)
+{
+    struct ast_subshell *subshell = (struct ast_subshell *) ast;
+    free_ast(subshell->compound_list);
+
+    free(subshell);
+}
+
 void free_ast(struct ast *ast)
 {
     if (!ast)
@@ -199,7 +207,8 @@ void free_ast(struct ast *ast)
         [AST_WHILE] = &free_while,
         [AST_UNTIL] = &free_until,
         [AST_FOR] = &free_for,
-        [AST_FUNC] = &free_func
+        [AST_FUNC] = &free_func,
+        [AST_SUBSHELL] = &free_subshell
     };
 
     (*free_functions[ast->type])(ast);

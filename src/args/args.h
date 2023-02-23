@@ -18,6 +18,8 @@ struct program_args
 
     bool pretty;
 
+    bool debug;
+
     char *file_path;
     char *str_input;
     char **args;

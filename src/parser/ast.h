@@ -176,6 +176,13 @@ struct ast_func
     struct vector *args;
 };
 
+struct ast_subshell
+{
+    struct ast base;
+
+    struct ast *compound_list;
+};
+
 typedef void (*free_type)(struct ast *ast);
 typedef void (*print_type)(struct ast *ast);
 

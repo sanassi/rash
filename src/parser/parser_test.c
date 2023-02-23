@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
     if (argc != 2)
         return 1;
 
-    struct stream *stream = stream_open_string(argv[1]);
+    struct stream *stream = stream_open_file(argv[1]);
     struct lexer *l = lexer_init();
     l->stream = stream;
 

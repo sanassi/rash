@@ -24,23 +24,6 @@ bool is_builtin(char *str)
     return false;
 }
 
-/*
-struct ast_func *get_function(char *name, struct env *env)
-{
-    if (!env->functions)
-        return NULL;
-
-    for (size_t i = 0; i < env->functions->size; i++)
-    {
-        struct ast_func *func = vector_get_at(env->functions, i);
-        if (strcmp(func->name, name) == 0)
-            return func;
-    }
-
-    return NULL;
-}
-*/
-
 /**
  * Store builtin name and execution function in a struct,
  * to simplify the builtin execution.
@@ -460,6 +443,41 @@ int func_execute(struct ast *ast, struct env *env)
     return true_builtin();
 }
 
+static int subshell_execute(struct ast *ast, struct env *env)
+{
+    struct ast_subshell *sub_node = (struct ast_subshell *) ast;
+
+    struct env *copy = env_init(); 
+    copy->isolated = true;
+    copy->enclosing = env;
+
+    int pid = fork();
+    char *pid_to_str = my_itoa(getppid());
+
+    env_add_variable(copy, "$", pid_to_str);
+    int status = true_builtin();
+
+    if (pid == 0)
+    {
+        int ret_val = run_ast(sub_node->compound_list, copy);
+
+        if (ret_val == EXIT_CODE)
+            exit(copy->exit_value);
+        exit(ret_val);
+    }
+    else
+    {
+        waitpid(pid, &status, 0);
+        free(pid_to_str);
+        env_free(copy);
+
+        if (WIFEXITED(status))
+            return WEXITSTATUS(status);
+    }
+
+    return true_builtin();
+}
+
 int run_ast(struct ast *ast, struct env *env)
 {
     if (!ast)
@@ -478,7 +496,8 @@ int run_ast(struct ast *ast, struct env *env)
         [AST_WHILE] = &while_execute,
         [AST_UNTIL] = &until_execute,
         [AST_FOR] = &for_execute,
-        [AST_FUNC] = &func_execute
+        [AST_FUNC] = &func_execute,
+        [AST_SUBSHELL] = &subshell_execute
     };
 
     int status = (*run_functions[ast->type])(ast, env);
