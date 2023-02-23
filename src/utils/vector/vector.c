@@ -25,6 +25,10 @@ static bool vector_dub_capacity(struct vector *v)
     return true;
 }
 
+/**
+ * If the vector is full, double its caapacity.
+ * Return false if there is an error.
+ */
 bool check_capacity(struct vector *v)
 {
     if (v->size + 1 == v->capacity)
@@ -69,6 +73,12 @@ void *vector_get_at(struct vector *v, size_t index)
     return v->nodes[index]->data;
 }
 
+/**
+ * Returns and array of strings from a vector.
+ * If add_null is true, add NULL at the end of the array.
+ *
+ * The data needs to be freed after usage, to prevent memory leaks.
+ */
 char **vector_convert_str_arr(struct vector *v, bool add_null)
 {
     char **res = NULL;
@@ -93,6 +103,10 @@ char **vector_convert_str_arr(struct vector *v, bool add_null)
     return res;
 }
 
+/**
+ * Free the given vector.
+ * Does not free the data, only the vector struct.
+ */
 void vector_free(struct vector *v)
 {
     if (!v)

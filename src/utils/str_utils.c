@@ -58,6 +58,13 @@ bool is_alphanum(char c)
     return is_alpha(c) || is_digit(c);
 }
 
+/**
+ * Appends to the string s1, the string s2.
+ * If s1 is NULL, return a copy of s2.
+ * Otherwise concatenate the two strings.
+ *
+ * Returns the result string (s1).
+ */
 char *my_str_cat(char *s1, char *s2, size_t len_s2)
 {
     if (s1 == NULL)

@@ -24,6 +24,9 @@ enum token_type parser_peek(struct parser *p)
     return lexer_look_next_token(p->lexer)->type;
 }
 
+/**
+ * Return the next token in the stream, and advance.
+ */
 static struct token *parser_advance(struct parser *p)
 {
     if (!p)
@@ -56,6 +59,10 @@ static bool parser_check(struct parser *p, enum token_type expected_type)
     return parser_peek(p) == expected_type;
 }
 
+/**
+ * Check if the type of the lookahead token is in the
+ * variadic list.
+ */
 static bool parser_check_mult(struct parser *p, size_t count, ...)
 {
     va_list ptr;
@@ -75,6 +82,11 @@ static bool parser_check_mult(struct parser *p, size_t count, ...)
     return false;
 }
 
+/**
+ * Consume the next token in the stream if its type matches one
+ * of the types in the variadic list.
+ * Return true if the token was consummed.
+ */
 static bool parser_match(struct parser *p, size_t count, ...)
 {
     va_list ptr;
@@ -95,7 +107,9 @@ static bool parser_match(struct parser *p, size_t count, ...)
     return false;
 }
 
-
+/*
+ * Macro to define the allocation functions of the AST nodes.
+ */
 #define AST_ALLOC(ast_type, enum_type)                                         \
     static struct ast_##ast_type *ast_##ast_type##_alloc(void)       \
     {                                                                          \
@@ -129,6 +143,7 @@ int parse_compound_list(struct parser *p, struct ast **res);
 int parse_and_or(struct parser *p, struct ast **res);
 int parse_if(struct parser *p, struct ast **res, bool expect_fi);
 int parse_redirection(struct parser *p, struct ast **res);
+
 
 int parse_for(struct parser *p, struct ast **res)
 {

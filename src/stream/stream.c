@@ -4,6 +4,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+/**
+ * Functions to create a stream from three types of input.
+ * Used to manipulate the input using C's FILE data type.
+ */
 struct stream *stream_open_string(char *string)
 {
     struct stream *s = calloc(1, sizeof(struct stream));
@@ -36,6 +40,9 @@ struct stream *stream_open_stdin(void)
     return s;
 }
 
+/**
+ * Read the next line from the input, add it to the buffer.
+ */
 void stream_get_line(struct stream *s)
 {
     char *line = NULL;
@@ -49,13 +56,15 @@ void stream_get_line(struct stream *s)
     }
 
     s->buffer = my_str_cat(s->buffer, line, nread);
-    // s -> buffer = my_str_cat(s -> buffer, line, line_len);
-
-    // printf("buffer_size = %lu\n",  s -> buffer_size);
     s->buffer_size += nread;
     free(line);
 }
 
+/**
+ * Return the next character in the input.
+ * If the stream is at then end, return EOF.
+ * Does not advance in the stream.
+ */
 char stream_peek(struct stream *s)
 {
     if (!s)
@@ -76,6 +85,11 @@ char stream_peek(struct stream *s)
     return EOF;
 }
 
+/**
+ * Return the next character in the stream.
+ * If the stream is at the end, return EOF.
+ * Moves forward the in stream.
+ */
 char stream_advance(struct stream *s)
 {
     if (!s)
@@ -113,6 +127,9 @@ char stream_advance(struct stream *s)
     return EOF;
 }
 
+/*
+ * Move the head of the stream one character back.
+ */
 void stream_go_back(struct stream *s)
 {
     if (s->current > 0)

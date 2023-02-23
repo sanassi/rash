@@ -1,7 +1,14 @@
 #include "args.h"
 #include <bits/getopt_core.h>
+#include <bits/getopt_ext.h>
 #include <err.h>
 
+/**
+ * Parse the command line arguments, and return a struct containing
+ * the program arguments.
+ *
+ * Uses getopt_long to parse the input. (does not reset optind).
+ */
 struct program_args *parse_cmd_line_args(int argc, char *argv[])
 {
    struct program_args *p_args = calloc(1, sizeof(struct program_args));
@@ -17,6 +24,7 @@ struct program_args *parse_cmd_line_args(int argc, char *argv[])
        static struct option long_option[] =
        {
            {"pretty-print", no_argument, 0, 'p'},
+           {"debug", no_argument, 0, 'd'},
            {0, 0, 0, 0},
        };
 
