@@ -24,7 +24,7 @@ With the following options:
 - -c [script], to read the input from a string.
 
 And for debug purposes:
-- -d or --debug, to print the input at each step of the execution.
+- -d or --debug, to print the input at each step of the parsing.
 - -p or --pretty-print, to print the resulting Abstract Syntax Tree representing the input.
 
 ## Testing
