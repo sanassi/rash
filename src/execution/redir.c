@@ -24,8 +24,7 @@ static int get_flags(enum redirection_type redir_type)
  * set the file descriptors, and open the file (Read and/or Write)
  */
 
-static void set_file_descriptors(struct ast_redir *redir, int *old,
-                                 int *fd)
+static void set_file_descriptors(struct ast_redir *redir, int *old, int *fd)
 {
     if (redir->redir_type == REDIR_LESSAND || redir->redir_type == REDIR_LESS)
     {
@@ -43,8 +42,7 @@ static void set_file_descriptors(struct ast_redir *redir, int *old,
             *old = open(redir->file, get_flags(redir->redir_type), 00700);
     }
 
-    if (redir->redir_type == REDIR_GREAT 
-            || redir->redir_type == REDIR_DGREAT
+    if (redir->redir_type == REDIR_GREAT || redir->redir_type == REDIR_DGREAT
         || redir->redir_type == REDIR_GREATAND
         || redir->redir_type == REDIR_CLOBBER
         || redir->redir_type == REDIR_LESSGREAT)
@@ -74,7 +72,7 @@ void redirect(struct vector *redirections)
     if (!redirections)
         return;
 
-    //struct ast_redir **redirs = (struct ast_redir **)nodes;
+    // struct ast_redir **redirs = (struct ast_redir **)nodes;
 
     for (size_t i = 0; i < redirections->size; i++)
     {
@@ -115,8 +113,8 @@ void undo_redirection(struct vector *redir_vect)
 
     for (size_t i = 0; i < nb_nodes; i++)
     {
-        struct ast_redir *redir_node = 
-            (struct ast_redir *) vector_get_at(redir_vect, i);
+        struct ast_redir *redir_node =
+            (struct ast_redir *)vector_get_at(redir_vect, i);
         fflush(stdout);
         fflush(stderr);
         dup2(redir_node->start_fd, redir_node->new_fd);
@@ -125,8 +123,8 @@ void undo_redirection(struct vector *redir_vect)
     }
 }
 
-void redirection_restore_fd(struct ast *node, int stdout_dup,
-                                   int stdin_dup, int stderr_dup)
+void redirection_restore_fd(struct ast *node, int stdout_dup, int stdin_dup,
+                            int stderr_dup)
 {
     struct ast_simple_cmd *sc_node = (struct ast_simple_cmd *)node;
 

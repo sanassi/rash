@@ -1,4 +1,5 @@
 #include "args.h"
+
 #include <bits/getopt_core.h>
 #include <bits/getopt_ext.h>
 #include <err.h>
@@ -11,30 +12,29 @@
  */
 struct program_args *parse_cmd_line_args(int argc, char *argv[])
 {
-   struct program_args *p_args = calloc(1, sizeof(struct program_args));
+    struct program_args *p_args = calloc(1, sizeof(struct program_args));
 
-   if (argc == 1)
-   {
-       p_args->input = true;
-       return p_args;
-   }
+    if (argc == 1)
+    {
+        p_args->input = true;
+        return p_args;
+    }
 
-   while (true)
-   {
-       static struct option long_option[] =
-       {
-           {"pretty-print", no_argument, 0, 'p'},
-           {"debug", no_argument, 0, 'd'},
-           {0, 0, 0, 0},
-       };
+    while (true)
+    {
+        static struct option long_option[] = {
+            { "pretty-print", no_argument, 0, 'p' },
+            { "debug", no_argument, 0, 'd' },
+            { 0, 0, 0, 0 },
+        };
 
-       int option_index = 0;
-       int c = getopt_long(argc, argv, "pdc:", long_option, &option_index);
-       if (c == -1)
-           break;
+        int option_index = 0;
+        int c = getopt_long(argc, argv, "pdc:", long_option, &option_index);
+        if (c == -1)
+            break;
 
-       switch(c)
-       {
+        switch (c)
+        {
         case 'p':
             p_args->pretty = true;
             break;
@@ -49,25 +49,24 @@ struct program_args *parse_cmd_line_args(int argc, char *argv[])
             break;
         default:
             errx(2, "invalid option");
-           break;
-       }
-   }
+            break;
+        }
+    }
 
-   if (optind < argc)
-   {
-       if (!p_args->string)
-       {
-           p_args->file = true;
-           p_args->file_path = strdup(argv[optind]);
-           optind += 1;
-       }
+    if (optind < argc)
+    {
+        if (!p_args->string)
+        {
+            p_args->file = true;
+            p_args->file_path = strdup(argv[optind]);
+            optind += 1;
+        }
 
-       p_args->args = argv + optind;
-       p_args->nb_args = argc - optind;
-   }
+        p_args->args = argv + optind;
+        p_args->nb_args = argc - optind;
+    }
 
-
-   return p_args;
+    return p_args;
 }
 
 void print_args(struct program_args *args)

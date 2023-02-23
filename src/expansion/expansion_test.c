@@ -1,6 +1,7 @@
-#include "expansion.h"
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "expansion.h"
 
 int main(void)
 {
@@ -10,7 +11,7 @@ int main(void)
     printf("%s\n", str);
     struct vector *res = expand(str, env);
 
-    printf("%s\n", (char *) vector_get_at(res, 0));
+    printf("%s\n", (char *)vector_get_at(res, 0));
 
     free(vector_get_at(res, 0));
     vector_free(res);

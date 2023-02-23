@@ -1,8 +1,9 @@
 #include "pipeline.h"
+
 #include "builtins/bool.h"
 
-int pipe_exec_fork(struct ast *node, int fds[2],
-                          enum pipe_side side, struct env *env)
+int pipe_exec_fork(struct ast *node, int fds[2], enum pipe_side side,
+                   struct env *env)
 {
     if (!node)
         return true_builtin();

@@ -26,7 +26,7 @@ bool file_is_readable(const char *file);
 bool is_dir(const char *path);
 ssize_t get_file_len(char *path);
 size_t hash(const char *str);
-bool str_is_number(char *str); 
+bool str_is_number(char *str);
 struct hash_map *hash_map_init(size_t size);
 void hash_map_free(struct hash_map *hash_map);
 

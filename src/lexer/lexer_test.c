@@ -1,11 +1,12 @@
-#include "lexer.h"
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "lexer.h"
+
 int main(int argc, char *argv[])
 {
-    (void) argc;
-    (void) argv;
+    (void)argc;
+    (void)argv;
     struct lexer *l = lexer_init();
     l->stream = stream_open_file(argv[1]);
 

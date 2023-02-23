@@ -11,7 +11,7 @@
 
 int cd(struct vector *args, struct env *env)
 {
-    (void) env; /* need to find a way to remove this.. */
+    (void)env; /* need to find a way to remove this.. */
     char buffer[PATH_MAX];
     char *cwd = getcwd(buffer, PATH_MAX);
     if (!cwd)
@@ -20,7 +20,7 @@ int cd(struct vector *args, struct env *env)
         return 1;
     }
 
-    if (args->size == 1/*!path || *path == '\0' || *path == '\n'*/)
+    if (args->size == 1 /*!path || *path == '\0' || *path == '\n'*/)
     {
         setenv("OLDPWD", cwd, 1);
         char *home = getenv("HOME");

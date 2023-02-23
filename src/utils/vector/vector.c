@@ -38,7 +38,7 @@ bool check_capacity(struct vector *v)
 
 bool vector_append(struct vector **v, void *elt, size_t elt_size)
 {
-    (void) elt_size;
+    (void)elt_size;
 
     if (!(*v))
         *v = vector_new();
@@ -58,9 +58,9 @@ bool vector_append(struct vector **v, void *elt, size_t elt_size)
     size_t size = res->size;
     res->nodes[size - 1] = calloc(1, sizeof(struct node));
 
-    //res->nodes[size - 1]->data = calloc(1, elt_size);
+    // res->nodes[size - 1]->data = calloc(1, elt_size);
     res->nodes[size - 1]->data = elt;
-    //memmove(res->nodes[size - 1]->data, elt, elt_size);
+    // memmove(res->nodes[size - 1]->data, elt, elt_size);
 
     return true;
 }
@@ -114,7 +114,7 @@ void vector_free(struct vector *v)
 
     for (size_t i = 0; i < v->size; i++)
     {
-        //free(v->nodes[i]->data);
+        // free(v->nodes[i]->data);
         free(v->nodes[i]);
     }
 
@@ -125,7 +125,7 @@ void vector_free(struct vector *v)
 void vector_print(struct vector *v)
 {
     printf("size = %lu\ncap = %lu\n", v->size, v->capacity);
-    for (size_t i = 0; i < v ->size; i++)
+    for (size_t i = 0; i < v->size; i++)
     {
         void *ptr = v->nodes[i]->data;
         printf("%p\n", ptr);

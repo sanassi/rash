@@ -1,24 +1,20 @@
 #include "lexer.h"
+
 #include <err.h>
 #include <stdbool.h>
 #include <stdio.h>
 
 #define HASH_MAP_DEFAULT_SIZE 50
 
-
-static const char *tokens_str[] =
-{
-    "<<", ">>", "<&", ">&", "<>", "<<-", ">|", "(",
-    ")", "|", "&", ";", "\n", ";;", "&&", "||",
-    "if", "then", "else", "elif", "fi", "do", "done",
-    "case", "esac", "while", "until", "for", "{", "}",
-    "!", "in", "<", ">", NULL,
+static const char *tokens_str[] = {
+    "<<",   ">>",   "<&", ">&", "<>",   "<<-",  ">|",   "(",     ")",
+    "|",    "&",    ";",  "\n", ";;",   "&&",   "||",   "if",    "then",
+    "else", "elif", "fi", "do", "done", "case", "esac", "while", "until",
+    "for",  "{",    "}",  "!",  "in",   "<",    ">",    NULL,
 };
-static const char *operators[] =
-{
-    "&", "&&", "(", ")", ";", ";;", "\n", "|",
-    "||", ">", "<", ">|", "<<", ">>", "<&",
-    ">&", "<>", NULL,
+static const char *operators[] = {
+    "&", "&&", "(",  ")",  ";",  ";;", "\n", "|",  "||",
+    ">", "<",  ">|", "<<", ">>", "<&", ">&", "<>", NULL,
 };
 
 static struct hash_map *get_operators(void)
@@ -130,7 +126,6 @@ bool char_can_form_operator(struct lexer *l, char c)
     return res;
 }
 
-
 static bool char_can_start_operator(char c)
 {
     for (size_t i = 0; operators[i]; i++)
@@ -196,7 +191,7 @@ void lexer_advance(struct lexer *l)
     {
         l->delimited = true;
         l->prev_char_in_op = false;
-        l->prev_char_in_word = false;        
+        l->prev_char_in_word = false;
         if (*l->cur_token)
             l->met_new_line = true;
         else
@@ -251,7 +246,7 @@ void lexer_advance(struct lexer *l)
             if (cur == '\\' && c == '"')
             {
                 cur = stream_advance(l->stream);
-                *l->cur_token = my_str_cat(*l->cur_token, &cur, 1);               
+                *l->cur_token = my_str_cat(*l->cur_token, &cur, 1);
             }
         }
         cur = stream_advance(l->stream);
@@ -372,7 +367,7 @@ struct token *lexer_create_token(struct lexer *l, char *str)
     type = hm_get_int(l->reserved_words, t->lexeme);
     if (type < 0 || l->context_is_set)
         type = WORD;
-    
+
     t->type = type;
 
     return t;
@@ -384,7 +379,7 @@ struct token *lexer_create_token(struct lexer *l, char *str)
  * call lexer_advance and create the next token,
  * otherwise, get the next token (already created) from the token
  * vector (at current_index).
- * 
+ *
  * It can be useful when we just want to look at the next token,
  * without eating it.
  */
@@ -428,8 +423,8 @@ struct token *lexer_get_next_token(struct lexer *l)
 
     if (l->met_new_line)
     {
-        vector_append(&l->tokens, 
-                lexer_create_token(l, "\n"), sizeof(struct token));
+        vector_append(&l->tokens, lexer_create_token(l, "\n"),
+                      sizeof(struct token));
         l->met_new_line = false;
     }
 
@@ -467,22 +462,22 @@ void token_print(struct token *t)
 {
     switch (t->type)
     {
-        case WORD:
-            printf("%s [WORD]\n", t->lexeme);
-            break;
-        case NEWLINE:
-            printf("\\n [NEWLINE]\n");
-            break;
-        case ASSIGNMENT_WORD:
-            printf("%s [ASSIGNMENT_WORD]\n", t->lexeme);
-            break;
-        case IONUMBER:
-            printf("%s [IONUMBER]\n", t->lexeme);
-            break;
-        case END:
-            printf("END\n");
-            break;
-        default:
-            printf("%s [%s]\n", t->lexeme, tokens_str[t->type]);
+    case WORD:
+        printf("%s [WORD]\n", t->lexeme);
+        break;
+    case NEWLINE:
+        printf("\\n [NEWLINE]\n");
+        break;
+    case ASSIGNMENT_WORD:
+        printf("%s [ASSIGNMENT_WORD]\n", t->lexeme);
+        break;
+    case IONUMBER:
+        printf("%s [IONUMBER]\n", t->lexeme);
+        break;
+    case END:
+        printf("END\n");
+        break;
+    default:
+        printf("%s [%s]\n", t->lexeme, tokens_str[t->type]);
     }
 }

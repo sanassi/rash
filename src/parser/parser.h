@@ -1,16 +1,16 @@
 #ifndef PARSER_H
 #define PARSER_H
 
-#include "ast.h"
-#include "ast_print.h"
-#include "ast_free.h"
-#include "../utils/utils.h"
-#include "../lexer/lexer.h"
-
-#include <string.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
+#include <string.h>
+
+#include "../lexer/lexer.h"
+#include "../utils/utils.h"
+#include "ast.h"
+#include "ast_free.h"
+#include "ast_print.h"
 
 #define PARSER_ERROR 2
 #define PARSER_OK 0
@@ -47,7 +47,6 @@ enum grammar_rule
     CASE_CLAUSE,
     CASE_ITEM
 };
-
 
 int parse_input(struct parser *p, struct ast **res);
 struct parser *parser_init(void);

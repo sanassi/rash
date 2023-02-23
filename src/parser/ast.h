@@ -1,10 +1,10 @@
 #ifndef AST_H
 #define AST_H
 
-#include <stdlib.h>
-#include <string.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "../utils/utils.h"
 
@@ -69,7 +69,7 @@ struct ast_cmd
 {
     struct ast base;
     struct ast *command;
-    
+
     struct vector *redirections;
 };
 
@@ -146,7 +146,7 @@ struct ast_while
     struct ast *body;
 };
 
-struct ast_until 
+struct ast_until
 {
     struct ast base;
 

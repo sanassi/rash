@@ -1,5 +1,6 @@
 #include "repl.h"
-
+#include <bits/getopt_core.h>
+#include <err.h>
 struct stream *stream_open(struct program_args *args)
 {
     if (args->file)
@@ -66,8 +67,8 @@ int rash_repl(struct program_args *args, struct env *env)
     for (size_t i = 0; i < l->tokens->size; i++)
         token_free(l->tokens->nodes[i]->data);
 
-    int env_exit_value = run_status
-        == EXIT_CODE ? env->exit_value : env->last_cmd_value;
+    int env_exit_value =
+        run_status == EXIT_CODE ? env->exit_value : env->last_cmd_value;
 
     vector_free(l->tokens);
     lexer_free(l);

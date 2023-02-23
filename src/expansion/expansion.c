@@ -1,4 +1,5 @@
 #include "expansion.h"
+
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -57,14 +58,14 @@ void expand_aux(struct expander *exp, struct env *env)
     }
     else if (c == '"')
     {
-       if (exp->quoting)
-           exp->quoting = false;
-       else
-           exp->quoting = true;
+        if (exp->quoting)
+            exp->quoting = false;
+        else
+            exp->quoting = true;
 
-       stream_advance(exp->stream);
-       expand_aux(exp, env);
-       return;
+        stream_advance(exp->stream);
+        expand_aux(exp, env);
+        return;
     }
     else if (c == '\\')
     {
@@ -105,10 +106,9 @@ void expand_aux(struct expander *exp, struct env *env)
                 return;
             }
 
-
             char *value = env_get_variable(env, to_replace);
             if (value)
-                *exp->current_str = 
+                *exp->current_str =
                     my_str_cat(*exp->current_str, value, strlen(value) + 1);
             free(value);
             free(to_replace);
@@ -141,7 +141,7 @@ struct vector *expand(char *str, struct env *env)
 
     if (*exp->current_str)
         vector_append(&res, strdup(*exp->current_str),
-                strlen(*exp->current_str) + 1);
+                      strlen(*exp->current_str) + 1);
 
     expander_free(exp);
 

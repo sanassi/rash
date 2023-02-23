@@ -1,4 +1,5 @@
 #include "env.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -26,8 +27,8 @@ void env_set_special_variables(struct env *env, int argc, char *argv[])
 {
     if (!env)
         return;
-    
-    env->argc = (size_t) argc;
+
+    env->argc = (size_t)argc;
 
     // $0 is not included in $#
     char *argc_str;
@@ -73,7 +74,7 @@ void env_free(struct env *env)
         {
             struct ast_func *func = vector_get_at(env->functions, i);
             func->nb_references = 0;
-            free_ast((struct ast*) func);
+            free_ast((struct ast *)func);
         }
         vector_free(env->functions);
     }
@@ -102,7 +103,7 @@ void env_add_variable(struct env *env, const char *id, char *value)
     }
 
     /* fond the global env (can even fuse the 2 conditions) */
-    if (!env->enclosing)     
+    if (!env->enclosing)
     {
         bool updated = true;
         hash_map_insert(env->variables, id, value, &updated);

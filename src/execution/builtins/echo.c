@@ -1,4 +1,5 @@
 #include "echo.h"
+
 #include <bits/getopt_core.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,28 +23,28 @@ void print(char *str, bool interpret)
 
         switch (str[i + 1])
         {
-            case 'n':
-                printf("\n");
-                i += 1;
-                break;
-            case 't':
-                i += 1;
-                printf("\t");
-                break;
-            case '\\':
-                i += 1;
-                printf("\\");
-                break;
-            default:
-                printf("%c", str[i]);
-                break;
+        case 'n':
+            printf("\n");
+            i += 1;
+            break;
+        case 't':
+            i += 1;
+            printf("\t");
+            break;
+        case '\\':
+            i += 1;
+            printf("\\");
+            break;
+        default:
+            printf("%c", str[i]);
+            break;
         }
     }
 }
 
 int echo(struct vector *args, struct env *env)
 {
-    (void) env; /* needs to be removed */
+    (void)env; /* needs to be removed */
     char **args_str = vector_convert_str_arr(args, false);
 
     int c;

@@ -1,8 +1,9 @@
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "ast_free.h"
 #include "ast_print.h"
 #include "parser.h"
-#include <stdio.h>
-#include <stdlib.h>
 
 int main(int argc, char *argv[])
 {
@@ -33,7 +34,6 @@ int main(int argc, char *argv[])
         if (done)
             break;
     }
-
 
     for (size_t i = 0; i < l->tokens->size; i++)
         token_free(l->tokens->nodes[i]->data);

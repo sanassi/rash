@@ -1,22 +1,22 @@
 #ifndef LEXER_H
 #define LEXER_H
 
-#include <string.h>
-#include <stdio.h>
+#include <ctype.h>
+#include <fnmatch.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-#include "../utils/utils.h"
 #include "../stream/stream.h"
-#include <fnmatch.h>
-#include <ctype.h>
+#include "../utils/utils.h"
 
 enum token_type
 {
     /*operators*/
 
-    //redirection operators
+    // redirection operators
     DLESS,
     DGREAT,
     LESSAND,
@@ -24,7 +24,7 @@ enum token_type
     LESSGREAT,
     DLESSDASH,
     CLOBBER,
-    //control operators
+    // control operators
     LPAR,
     RPAR,
     PIPE,
@@ -108,10 +108,10 @@ struct lexer
 struct lexer *lexer_init(void);
 bool char_can_form_operator(struct lexer *l, char c);
 void lexer_free(struct lexer *l);
-//char *lexer_advance(struct lexer *l);
+// char *lexer_advance(struct lexer *l);
 void lexer_advance(struct lexer *l);
 struct token *lexer_get_next_token(struct lexer *l);
-void token_free(struct token *t); 
+void token_free(struct token *t);
 struct token *lexer_look_next_token(struct lexer *l);
 void token_print(struct token *t);
 #endif /* ! LEXER_H */

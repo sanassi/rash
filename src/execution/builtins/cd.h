@@ -10,9 +10,9 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#include "../../utils/vector/vector.h"
-#include "../../utils/utils.h"
 #include "../../env/env.h"
+#include "../../utils/utils.h"
+#include "../../utils/vector/vector.h"
 
 #define CD_ERROR_EXIT -1
 
