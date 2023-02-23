@@ -1,0 +1,4 @@
+a=7
+echo $a
+
+(echo $a; (echo $a; a=7; echo toto; exit 42; ); echo toto; echo $a)
