@@ -1,7 +1,7 @@
 # RASH - A minimal "POSIX" Shell
 
 ## About the project
-Rash is my second attempt at the 42sh project (in C) from EPITA. The goal is to write a __POSIX Shell__ from scratch.
+Rash is my second attempt at the [42sh](https://github.com/sanassi/42sh) project (in C) from EPITA. The goal is to write a __POSIX Shell__ from scratch.
 The project was really fun and I think I could have done better with more preparation (and time).
 It's also a nice project to showcase my skills in C, and how much stuff I learned since the beginning of ING1 (3rd year at EPITA).
 
